@@ -1,0 +1,648 @@
+/* Animations pour les transitions d'images */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes slideInFromLeft {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+@keyframes zoomIn {
+  from {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  to {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Classes d'animation */
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-out forwards;
+}
+
+.animate-slide-in {
+  animation: slideInFromLeft 0.5s ease-out forwards;
+}
+
+.animate-slide-in-left {
+  animation: slideInFromLeft 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.animate-zoom-in {
+  animation: zoomIn 0.5s ease-out forwards;
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+/* Transitions */
+.transition-zoom {
+  transition: transform 0.3s ease-in-out;
+}
+
+.transition-opacity {
+  transition: opacity 0.3s ease-in-out;
+}
+
+.transition-colors {
+  transition: background-color 0.3s ease-in-out, color 0.3s ease-in-out;
+}
+
+.transition-all-smooth {
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Effets de survol */
+.hover-scale:hover {
+  transform: scale(1.05);
+}
+
+.hover-lift:hover {
+  transform: translateY(-5px);
+}
+
+.hover-bright:hover {
+  filter: brightness(1.1);
+}
+
+/* Effet de zoom pour les images */
+.zoom-container {
+  overflow: hidden;
+  position: relative;
+}
+
+.zoom-image {
+  transition: transform 0.5s ease-in-out;
+}
+
+.zoom-container:hover .zoom-image {
+  transform: scale(1.1);
+}
+
+/* Animation de chargement */
+.loading-spinner {
+  position: relative;
+  width: 40px;
+  height: 40px;
+  margin: 0 auto;
+}
+
+.loading-spinner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid #A67B5B;
+  opacity: 0.2;
+  border-radius: 50%;
+  animation: ping 1.5s cubic-bezier(0, 0, 0.2, 1) infinite;
+}
+
+.loading-spinner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(166, 123, 91, 0.3);
+  border-top-color: #A67B5B;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes ping {
+  75%, 100% {
+    transform: scale(1.5);
+    opacity: 0;
+  }
+}
+
+/* Animation de rebond pour les points de chargement */
+@keyframes bounce {
+  0%, 80%, 100% {
+    transform: scale(0);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Animation de vague pour le chargement */
+@keyframes waveAnimation {
+  0%, 40%, 100% {
+    transform: scaleY(0.4);
+  }
+  20% {
+    transform: scaleY(1);
+  }
+}
+
+/* Animation de transition pour le changement d'image */
+.image-transition-enter {
+  opacity: 0;
+  transform: scale(0.9);
+}
+
+.image-transition-enter-active {
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity 300ms, transform 300ms;
+}
+
+.image-transition-exit {
+  opacity: 1;
+}
+
+.image-transition-exit-active {
+  opacity: 0;
+  transition: opacity 300ms;
+}
+
+/* Animation de défilement horizontal */
+.scroll-left {
+  animation: scroll-left 20s linear infinite;
+}
+
+@keyframes scroll-left {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-100%);
+  }
+}
+
+/* Animation de fondu pour les galeries d'images */
+.fade-gallery {
+  position: relative;
+}
+
+.fade-gallery img {
+  position: absolute;
+  top: 0;
+  left: 0;
+  opacity: 0;
+  transition: opacity 1s ease-in-out;
+}
+
+.fade-gallery img.active {
+  opacity: 1;
+}
+
+/* Animation de zoom avec origine dynamique */
+.dynamic-zoom {
+  overflow: hidden;
+  position: relative;
+  cursor: none; /* Masquer le curseur par défaut */
+}
+
+.dynamic-zoom img {
+  transition: transform 0.3s ease-out;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Curseur personnalisé pour l'effet de zoom */
+.dynamic-zoom::before {
+  content: '';
+  position: absolute;
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.7);
+  background-color: rgba(255, 255, 255, 0.1);
+  top: var(--y, 50%);
+  left: var(--x, 50%);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  z-index: 10;
+  opacity: 0;
+  transition: opacity 0.2s ease, width 0.2s ease, height 0.2s ease;
+}
+
+.dynamic-zoom:hover::before {
+  opacity: 1;
+  width: 40px;
+  height: 40px;
+}
+
+/* Effet de surbrillance subtil */
+.dynamic-zoom::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle 100px at var(--x, 50%) var(--y, 50%),
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.dynamic-zoom:hover::after {
+  opacity: 1;
+}
+
+/* Transition fluide pour le zoom */
+.transition-all-smooth {
+  transition: all 0.25s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Animation de déplacement fluide */
+.smooth-translate {
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Style pour la barre de défilement des miniatures */
+.scrollbar-thin::-webkit-scrollbar {
+  height: 4px;
+  width: 4px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #A67B5B;
+  border-radius: 10px;
+}
+
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: #8B5A2B;
+}
+
+/* Style pour la barre de défilement élégante */
+.scrollbar-elegant::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-elegant::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-elegant::-webkit-scrollbar-thumb {
+  background: rgba(166, 123, 91, 0.3);
+  border-radius: 10px;
+  transition: background 0.3s ease;
+}
+
+.scrollbar-elegant::-webkit-scrollbar-thumb:hover {
+  background: rgba(166, 123, 91, 0.6);
+}
+
+/* Masquer la barre de défilement mais garder la fonctionnalité */
+.scrollbar-hidden {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.scrollbar-hidden::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+/* Animation de couleur de fond */
+.bg-sweep {
+  position: relative;
+  overflow: hidden;
+}
+
+.bg-sweep::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(166, 123, 91, 0.2);
+  transition: transform 0.5s ease-out;
+  z-index: -1;
+}
+
+.bg-sweep:hover::before {
+  transform: translateX(100%);
+}
+
+/* Animations pour le carrousel héro */
+.hero-slide:not(.active) .hero-slide-title,
+.hero-slide:not(.active) .hero-slide-desc,
+.hero-slide:not(.active) .hero-slide-btn {
+  opacity: 0;
+  transform: translateY(20px);
+}
+
+.hero-slide.active .hero-slide-title {
+  transition-delay: 300ms;
+}
+
+.hero-slide.active .hero-slide-desc {
+  transition-delay: 500ms;
+}
+
+.hero-slide.active .hero-slide-btn {
+  transition-delay: 700ms;
+}
+
+/* Animation d'entrée pour les sections */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Enhanced animations for professional look */
+@keyframes fadeInRight {
+  from {
+    opacity: 0;
+    transform: translateX(-40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in-right {
+  animation: fadeInRight 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes fadeInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(40px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in-left {
+  animation: fadeInLeft 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes scaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.scale-in {
+  animation: scaleIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.6) 50%,
+    rgba(255, 255, 255, 0) 100%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+/* Elegant loading animation */
+@keyframes elegantSpin {
+  0% {
+    transform: rotate(0deg);
+  }
+  50% {
+    transform: rotate(180deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.elegant-spin {
+  animation: elegantSpin 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* Smooth reveal animation for sections */
+@keyframes revealUp {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.reveal-up {
+  opacity: 0;
+  animation: revealUp 0.8s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+/* Staggered animation for list items */
+.stagger-item {
+  opacity: 0;
+  animation: revealUp 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) forwards;
+}
+
+.stagger-item:nth-child(1) { animation-delay: 0.1s; }
+.stagger-item:nth-child(2) { animation-delay: 0.2s; }
+.stagger-item:nth-child(3) { animation-delay: 0.3s; }
+.stagger-item:nth-child(4) { animation-delay: 0.4s; }
+.stagger-item:nth-child(5) { animation-delay: 0.5s; }
+.stagger-item:nth-child(6) { animation-delay: 0.6s; }
+.stagger-item:nth-child(7) { animation-delay: 0.7s; }
+.stagger-item:nth-child(8) { animation-delay: 0.8s; }
+
+/* Animation de soulignement élégant */
+.underline-animation {
+  position: relative;
+  display: inline-block;
+}
+
+.underline-animation::after {
+  content: '';
+  position: absolute;
+  width: 0;
+  height: 2px;
+  bottom: -2px;
+  left: 0;
+  background-color: #A67B5B;
+  transition: width 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+.underline-animation:hover::after {
+  width: 100%;
+}
+
+/* Disable underline animation for navbar items */
+.nav-item.underline-animation::after,
+nav .nav-item::after {
+  display: none !important;
+}
+
+.nav-item.underline-animation:hover::after,
+nav .nav-item:hover::after {
+  width: 0 !important;
+}
+
+/* Animation de transition pour les boutons */
+.btn-transition {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.btn-transition::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #A67B5B;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: -1;
+}
+
+.btn-transition:hover::before {
+  transform: translateX(100%);
+}
+
+/* Styles pour les cartes de catégorie */
+.category-card {
+  transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  backface-visibility: hidden;
+}
+
+/* Effet de parallaxe au survol */
+.parallax-card {
+  transform-style: preserve-3d;
+  transition: transform 0.5s ease-out;
+}
+
+.parallax-card:hover {
+  transform: translateZ(20px);
+}
+
+/* Effet de profondeur pour les éléments internes */
+.depth-element {
+  transform: translateZ(0);
+  transition: transform 0.5s ease-out;
+}
+
+.parallax-card:hover .depth-element-1 {
+  transform: translateZ(10px);
+}
+
+.parallax-card:hover .depth-element-2 {
+  transform: translateZ(20px);
+}
+
+.parallax-card:hover .depth-element-3 {
+  transform: translateZ(30px);
+}
+
+/* Effet de bordure élégante */
+.elegant-border {
+  position: relative;
+}
+
+.elegant-border::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(166, 123, 91, 0.2);
+  opacity: 0;
+  transition: all 0.5s ease;
+}
+
+.elegant-border:hover::after {
+  opacity: 1;
+  inset: 10px;
+}
+
+/* Effet de surbrillance élégant */
+.elegant-highlight {
+  position: relative;
+  overflow: hidden;
+}
+
+.elegant-highlight::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(
+    circle 100px at var(--x, 50%) var(--y, 50%),
+    rgba(166, 123, 91, 0.3),
+    transparent 70%
+  );
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.elegant-highlight:hover::before {
+  opacity: 1;
+}

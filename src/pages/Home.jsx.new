@@ -1,0 +1,286 @@
+import React, { useEffect, useState } from "react";
+// Import CSS only when needed using dynamic imports
+import "../style/style.css";
+import { useNavigate } from "react-router-dom";
+import Categorie from '../Produit/Categorie.jsx';
+import axios from "axios";
+import DiscountModal from "@/DiscountBanner";
+import { useAuth } from "@/Contexts/AuthContext";
+import OptimizedCarousel from "../Components/OptimizedCarousel";
+import apiService from "../utils/apiService";
+import DynamicButton from "./won";
+
+// Carousel settings for the OptimizedCarousel component
+const heroSettings = {
+  dots: true,
+  infinite: true,
+  speed: 800,
+  slidesToShow: 1,
+  slidesToScroll: 1,
+  autoplay: true,
+  autoplaySpeed: 5000,
+  arrows: false,
+  fade: true,
+  cssEase: 'cubic-bezier(0.7, 0, 0.3, 1)'
+};
+
+export function Home() {
+  const [categoriesEnVedette, setCategoriesEnVedette] = useState([]); // État pour les catégories en vedette
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const { isFirstLogin, isAuthenticated } = useAuth();
+  const [carrouselSlides, setCarrouselSlides] = useState([]);
+  const [isCarouselLoading, setIsCarouselLoading] = useState(true);
+  const [carouselError, setCarouselError] = useState(null);
+
+  const navigate = useNavigate();
+
+  // Load CSS dynamically to prevent render blocking
+  useEffect(() => {
+    // Function to load CSS asynchronously
+    const loadCSS = (href, integrity = null, crossOrigin = null) => {
+      return new Promise((resolve, reject) => {
+        const link = document.createElement('link');
+        link.href = href;
+        link.rel = 'stylesheet';
+        if (integrity) link.integrity = integrity;
+        if (crossOrigin) link.crossOrigin = crossOrigin;
+
+        link.onload = () => resolve(link);
+        link.onerror = () => reject(new Error(`Failed to load CSS: ${href}`));
+
+        document.head.appendChild(link);
+      });
+    };
+
+    // Load CSS files in parallel
+    const loadAllCSS = async () => {
+      try {
+        // Load Bootstrap CSS
+        const bootstrapCSS = loadCSS(
+          'https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css',
+          'sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH',
+          'anonymous'
+        );
+
+        // Load Slick Carousel CSS
+        const slickCSS = loadCSS('https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css');
+        const slickThemeCSS = loadCSS('https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css');
+
+        // Wait for all CSS to load
+        await Promise.all([bootstrapCSS, slickCSS, slickThemeCSS]);
+        console.log('All CSS loaded successfully');
+      } catch (error) {
+        console.error('Error loading CSS:', error);
+      }
+    };
+
+    // Use requestIdleCallback to load CSS during browser idle time
+    if (window.requestIdleCallback) {
+      window.requestIdleCallback(() => loadAllCSS());
+    } else {
+      // Fallback for browsers that don't support requestIdleCallback
+      setTimeout(loadAllCSS, 100);
+    }
+
+    // Cleanup function to remove CSS when component unmounts
+    return () => {
+      const links = document.querySelectorAll('link[href*="bootstrap"], link[href*="slick"]');
+      links.forEach(link => {
+        if (document.head.contains(link)) {
+          document.head.removeChild(link);
+        }
+      });
+    };
+  }, []);
+
+  // Utilisation de useEffect pour récupérer les catégories via notre service API optimisé
+  useEffect(() => {
+    if (isFirstLogin) {
+      setIsModalOpen(true); // Afficher la modale si c'est la première connexion
+    }
+  }, [isFirstLogin]);
+
+  // Utilisation de useEffect pour récupérer les catégories en vedette avec notre service API optimisé
+  useEffect(() => {
+    apiService.get('/categories/featured')
+      .then((data) => {
+        setCategoriesEnVedette(data); // Mettre à jour l'état avec les catégories en vedette
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la récupération des catégories en vedette", error);
+      });
+  }, []);
+
+  // Check for redirect path in sessionStorage after successful authentication
+  useEffect(() => {
+    if (isAuthenticated) {
+      const redirectPath = sessionStorage.getItem('redirectPath');
+      if (redirectPath) {
+        // Clear the redirect path from sessionStorage
+        sessionStorage.removeItem('redirectPath');
+        // Navigate to the stored path
+        navigate(redirectPath);
+      }
+    }
+  }, [isAuthenticated, navigate]);
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  // Optimized carousel loading with caching and preloading
+  useEffect(() => {
+    const fetchCarrousels = async () => {
+      try {
+        setIsCarouselLoading(true);
+        setCarouselError(null);
+
+        // Use the cached API service with longer cache duration
+        const carrousels = await apiService.get('/carousels/actifs', {}, {
+          useCache: true,
+          cacheDuration: 60 * 10 // Cache for 10 minutes
+        });
+
+        if (carrousels.length > 0) {
+          const firstCarrouselId = carrousels[0].id;
+          // Use the cached API service
+          const slides = await apiService.get(`/carousels/${firstCarrouselId}/slides`, {}, {
+            useCache: true,
+            cacheDuration: 60 * 10 // Cache for 10 minutes
+          });
+
+          // Preload images for faster rendering
+          if (slides.length > 0) {
+            // Preload first image immediately
+            if (slides[0].primary_image_url) {
+              const firstImg = new Image();
+              firstImg.src = slides[0].primary_image_url;
+            }
+
+            // Preload remaining images during idle time
+            if (window.requestIdleCallback && slides.length > 1) {
+              window.requestIdleCallback(() => {
+                slides.slice(1).forEach(slide => {
+                  if (slide.primary_image_url) {
+                    const img = new Image();
+                    img.src = slide.primary_image_url;
+                  }
+                });
+              });
+            }
+          }
+
+          setCarrouselSlides(slides);
+          console.log('Carousel slides loaded:', slides);
+        } else {
+          setCarrouselSlides([]);
+          console.log('No active carousels found');
+        }
+      } catch (error) {
+        console.error("Erreur lors du chargement des carrousels actifs et de leurs diapositives", error);
+        setCarouselError("Impossible de charger le carrousel. Veuillez réessayer plus tard.");
+        setCarrouselSlides([]);
+      } finally {
+        setIsCarouselLoading(false);
+      }
+    };
+
+    fetchCarrousels();
+  }, []);
+
+  return (
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-serif">
+      {/* 🔹 Modale de réduction */}
+      <DiscountModal isOpen={isModalOpen} onClose={closeModal} />
+      
+      {/* 🔹 HERO CAROUSEL - Using OptimizedCarousel component */}
+      <section className="relative w-full">
+        <OptimizedCarousel
+          slides={carrouselSlides}
+          settings={heroSettings}
+          loading={isCarouselLoading}
+          error={carouselError}
+          emptyMessage="Aucune diapositive disponible"
+          height="500px"
+          className="hero-carousel"
+        />
+      </section>
+
+      {/* 🔹 CATEGORIES EN VEDETTE */}
+      <section className="py-20 px-6 overflow-hidden bg-gradient-to-b from-white to-gray-50">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-light tracking-widest mb-4 relative inline-block">
+              <span className="relative">
+                CATÉGORIES
+                <span className="absolute -bottom-2 left-1/2 w-16 h-0.5 bg-[#A67B5B] transform -translate-x-1/2 transition-all duration-700 hover:w-full"></span>
+              </span>
+            </h2>
+            <p className="text-gray-500 max-w-2xl mx-auto mt-4 text-sm">
+              Découvrez notre sélection raffinée de produits de luxe, organisés par catégories pour faciliter votre navigation
+            </p>
+          </div>
+
+          {/* Conteneur des cartes avec effet de parallaxe subtil */}
+          <div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 lg:gap-10"
+            style={{
+              perspective: '1000px',
+              transformStyle: 'preserve-3d'
+            }}
+          >
+            {categoriesEnVedette.slice(0, 6).map((cat, index) => ( // Limite à 6 catégories
+              <div
+                key={cat.id}
+                className="transform transition-all duration-700 hover:translate-z-10"
+                style={{
+                  transformStyle: 'preserve-3d',
+                  transform: `translateZ(0) rotateX(0) rotateY(0)`,
+                  transition: 'transform 0.5s ease-out'
+                }}
+              >
+                <Categorie
+                  id={index + 1} // Utiliser l'index pour l'animation séquentielle
+                  name={cat.nom_categorie}
+                  image={cat.image_categorie}
+                  des={cat.description_categorie}
+                />
+              </div>
+            ))}
+          </div>
+
+          {/* Bouton élégant */}
+          <div className="flex justify-center mt-16">
+            <div className="transform transition-all duration-500 hover:scale-105">
+              <DynamicButton
+                label="Explorer toutes les catégories"
+                to="/Produit/AllCat"
+                className="btn-transition"
+              />
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 🔹 À PROPOS */}
+      <section className="py-16 px-6 bg-gray-200 relative overflow-hidden">
+        <div className="absolute inset-0 bg-[url('/img/texture-bg.jpg')] opacity-5"></div>
+        <div className="max-w-5xl mx-auto text-center relative z-10">
+          <h1 className="text-2xl font-extralight tracking-widest mb-2 transition-all duration-700 transform hover:scale-105">
+            <span className="relative inline-block after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-0 after:h-0.5 after:bg-[#A67B5B] after:transition-all after:duration-700 hover:after:w-full">
+              À propos de nous
+            </span>
+          </h1>
+          <div className="w-24 h-px bg-[#A67B5B] mx-auto my-6 transition-all duration-500 hover:w-32"></div>
+          <p className="text-gray-600 leading-relaxed transition-all duration-500 hover:text-gray-800">
+            Bienvenue sur notre showroom en ligne, une vitrine dédiée à l'élégance et au design d'intérieur.
+            Nous vous proposons une sélection raffinée de marques prestigieuses, alliant qualité et style. Que vous cherchiez des pièces modernes,
+            intemporelles ou audacieuses, notre plateforme vous permet de découvrir et d'explorer des collections uniques pour sublimer vos espaces.
+          </p>
+        </div>
+      </section>
+    </div>
+  );
+}
+
+export default Home;
