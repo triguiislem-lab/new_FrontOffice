@@ -6,7 +6,8 @@
 export const DEFAULT_SPINNER = {
   variant: 'circle',  // circle, dots, pulse, wave, ripple
   size: 'md',         // xs, sm, md, lg, xl
-  color: '#A67B5B',   // Primary brand color
+  color: '#A67B5B',   // Primary brand color - brown
+  loadingLineColor: '#A67B5B', // Color for loading progress bars
   bgColor: 'bg-white', // Background color for overlay/fullscreen modes
   textColor: 'text-gray-600', // Text color for loading messages
 };

@@ -291,9 +291,12 @@ function Cart() {
             <p className="text-gray-500 mb-6">Votre panier est vide.</p>
             <Link
               to="/home"
-              className="inline-block bg-[#A67B5B] text-white px-6 py-3 rounded hover:bg-[#8A5A3B] transition-colors"
+              className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300"
             >
-              Continuer vos achats
+              <span>Continuer vos achats</span>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
+              </svg>
             </Link>
           </div>
         ) : (
@@ -369,14 +372,20 @@ function Cart() {
               <div className="flex justify-end mt-6">
                 <button
                   onClick={clearCart}
-                  className="px-6 py-3 border border-gray-300 rounded text-gray-700 hover:bg-gray-100 transition-colors"
+                  className="flex items-center px-8 py-3 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 transition-all duration-300 shadow-sm hover:shadow-md font-medium"
                 >
-                  Vider le panier
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                  </svg>
+                  <span>Vider le panier</span>
                 </button>
                 <button
-                  className="px-6 py-3 bg-[#A67B5B] text-white rounded hover:bg-[#8A5A3B] transition-colors ml-4"
+                  className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300 ml-4"
                 >
-                  Passer la commande
+                  <span>Passer la commande</span>
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
                 </button>
               </div>
             </div>

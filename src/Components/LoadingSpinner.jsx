@@ -1,4 +1,6 @@
 import React from 'react';
+import LoadingLine from './LoadingLine';
+import { DEFAULT_SPINNER } from '../utils/loadingConfig';
 
 /**
  * Enhanced LoadingSpinner component for consistent loading states across the application
@@ -12,17 +14,19 @@ import React from 'react';
  * @param {boolean} overlay - Whether to show a background overlay
  * @param {string} bgColor - Background color for overlay/fullscreen modes
  * @param {string} textColor - Color for the loading message
+ * @param {boolean} showLoadingLine - Whether to show a loading line below the spinner
  */
 const LoadingSpinner = ({
   size = "md",
-  color = "#A67B5B",
+  color = DEFAULT_SPINNER.color,
   className = "",
   fullScreen = false,
   message = "",
   variant = "elegant", // Changed default to elegant
   overlay = false,
   bgColor = "bg-white",
-  textColor = "text-gray-600"
+  textColor = "text-gray-600",
+  showLoadingLine = false
 }) => {
   // Size mappings
   const sizeMap = {
@@ -211,6 +215,11 @@ const LoadingSpinner = ({
           <p className={`mt-4 ${textColor} font-medium ${textSize} animate-pulse text-center`}>
             {message}
           </p>
+        )}
+        {showLoadingLine && (
+          <div className="mt-6 w-full max-w-xs mx-auto">
+            <LoadingLine color={color} height="2px" />
+          </div>
         )}
       </div>
     </div>

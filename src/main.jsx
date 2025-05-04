@@ -19,6 +19,9 @@ import theme from "./theme";
 import "./style/tailwind.css";
 import "./style/animations.css";
 import "./style/global.css";
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
+import "./style/carousel.css";
 
 ReactDOM.createRoot(document.getElementById("root")).render(
     <BrowserRouter>

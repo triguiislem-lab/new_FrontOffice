@@ -5,6 +5,29 @@ import LoadingSpinner from "../Components/LoadingSpinner";
 import EnhancedLazyImage from "../Components/EnhancedLazyImage";
 import apiService from "../utils/apiService";
 
+// Custom CSS for animations
+const customStyles = `
+  @keyframes pulse-width {
+    0% { width: 15%; }
+    50% { width: 85%; }
+    100% { width: 15%; }
+  }
+
+  .animate-pulse-width {
+    animation: pulse-width 2s ease-in-out infinite;
+  }
+
+  .skeleton-pulse {
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.8; }
+    100% { opacity: 0.6; }
+  }
+`;
+
 function ProductsPage() {
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -419,6 +442,7 @@ function ProductsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-serif">
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       <div className="max-w-7xl mx-auto px-4 py-12">
         {/* Elegant page header with animation */}
         <div className="text-center mb-12 fade-in-up">
@@ -727,13 +751,17 @@ function ProductsPage() {
               </div>
             </div>
 
-            {/* Loading state with skeleton cards */}
+            {/* Loading state with improved skeleton cards */}
             {loading && (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
                 {[...Array(6)].map((_, index) => (
-                  <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden animate-pulse">
+                  <div key={index} className="bg-white rounded-lg shadow-md overflow-hidden skeleton-pulse">
                     {/* Image skeleton */}
-                    <div className="h-56 bg-gray-200"></div>
+                    <div className="h-56 bg-gray-200 relative">
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <LoadingSpinner size="sm" variant="circle" color="#A67B5B" />
+                      </div>
+                    </div>
 
                     {/* Content skeleton */}
                     <div className="p-5">
@@ -763,33 +791,38 @@ function ProductsPage() {
 
             {/* Error state with improved styling */}
             {error && !loading && (
-              <div className="flex flex-col justify-center items-center h-64 text-center p-8 bg-red-50 rounded-lg border border-red-100">
-                <div className="mb-6 text-red-500">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+              <div className="flex flex-col justify-center items-center h-96 text-center p-8 bg-white rounded-lg shadow-md border border-gray-100">
+                <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-medium text-red-800 mb-2">Une erreur est survenue</h3>
-                <p className="text-red-600 mb-4">{error}</p>
+                <h3 className="text-2xl font-light text-gray-800 mb-4">Une erreur est survenue</h3>
+                <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-4 opacity-30"></div>
+                <p className="text-gray-600 mb-8 max-w-md">{error}</p>
                 <button
                   onClick={resetFilters}
-                  className="px-4 py-2 bg-white text-red-600 border border-red-300 rounded-md hover:bg-red-50 transition-colors duration-300"
+                  className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300"
                 >
-                  Réinitialiser les filtres
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  <span>Réinitialiser les filtres</span>
                 </button>
               </div>
             )}
 
             {/* Empty state with improved styling */}
             {!loading && !error && products.length === 0 && (
-              <div className="flex flex-col justify-center items-center h-80 text-center p-8 bg-gray-50 rounded-lg border border-gray-200">
-                <div className="mb-6 text-gray-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-20 w-20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <div className="flex flex-col justify-center items-center h-96 text-center p-8 bg-white rounded-lg shadow-md border border-gray-100">
+                <div className="mb-6 text-[#A67B5B] opacity-80">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-24 w-24" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z" />
                   </svg>
                 </div>
-                <h3 className="text-xl font-medium text-gray-800 mb-2">Aucun produit trouvé</h3>
-                <p className="text-gray-600 mb-6 max-w-md">
+                <h3 className="text-2xl font-light text-gray-800 mb-4">Aucun produit trouvé</h3>
+                <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-4 opacity-30"></div>
+                <p className="text-gray-600 mb-8 max-w-md">
                   Aucun produit ne correspond à vos critères de recherche. Essayez d'élargir votre recherche ou de réinitialiser les filtres.
                 </p>
                 <button

@@ -1,18 +1,13 @@
-import React, { useEffect, useState, useRef } from "react";
-// Import CSS only when needed using dynamic imports
+import React, { useEffect, useState } from "react";
 import "../style/style.css";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import Categorie from '../Produit/Categorie.jsx';
-import { Facebook, Instagram } from "lucide-react";
-import axios from "axios";
 import DiscountModal from "@/DiscountBanner";
 import { useAuth } from "@/Contexts/AuthContext";
 import EnhancedLazyImage from "../Components/EnhancedLazyImage";
 import OptimizedCarousel from "../Components/OptimizedCarousel";
 import apiService from "../utils/apiService";
 import LoadingSpinner from "../Components/LoadingSpinner";
-import { COMPONENT_LOADING, LOADING_MESSAGES } from "../utils/loadingConfig";
-export { default as Profile } from './Profile';
 import DynamicButton from "./won";
 
 // Carousel settings for the OptimizedCarousel component
@@ -24,82 +19,26 @@ const heroSettings = {
   slidesToScroll: 1,
   autoplay: true,
   autoplaySpeed: 5000,
-  arrows: false,
+  arrows: true,
   fade: true,
-  cssEase: 'cubic-bezier(0.7, 0, 0.3, 1)'
+  cssEase: 'cubic-bezier(0.7, 0, 0.3, 1)',
+  responsive: [
+    {
+      breakpoint: 768,
+      settings: {
+        arrows: false,
+        dots: true
+      }
+    }
+  ]
 };
 
-// Images du Carousel
-// const heroImages = [
-//   { src: "/img/summer-2025-9435.png", text: "Discover Your Perfect Furniture" },
-//   { src: "/img/summer-2025-9436.png", text: "Style & Comfort in Every Detail" },
-//   { src: "/img/summer-2025-9437.png", text: "Find Your Dream Interior" },
-// ];
 
-// Fonction pour récupérer les carrousels actifs
-async function getCarrouselsActifs() {
-  try {
-    const response = await axios.get("https://laravel-api.fly.dev/api/carousels/actifs");
-    return response.data;
-  } catch (error) {
-    console.error('Erreur lors de la récupération des carrousels:', error);
-    throw error;
-  }
-}
-
-// Fonction pour récupérer les diapositives d'un carrousel
-async function getDiapositivesCarrousel(carrouselId) {
-  try {
-    const response = await axios.get(`https://laravel-api.fly.dev/api/carousels/${carrouselId}/slides`);
-    return response.data;
-  } catch (error) {
-    console.error('Erreur lors de la récupération des diapositives:', error);
-    throw error;
-  }
-}
-
-// Fonction pour récupérer les catégories en vedette
-async function getCategoriesEnVedette() {
-  try {
-    const response = await axios.get("https://laravel-api.fly.dev/api/categories/featured");
-    return response.data;
-  } catch (error) {
-    console.error('Erreur lors de la récupération des catégories en vedette:', error);
-    throw error;
-  }
-}
-
-
-// Données pour la section actualités
-const newsItems = [
-  {
-    id: 1,
-    image: "/img/catalogue-printemps-2025.jpg",
-    title: "Notre catalogue Printemps-Été 2025 est arrivé !",
-    description: "Il est enfin arrivé. L...",
-    link: "/actualites/catalogue-printemps-ete-2025",
-  },
-  {
-    id: 2,
-    image: "/img/les-chartistes.jpg",
-    title: "NOUVEAU - Les Chartistes",
-    description: "Entrez dans le monde des Chartistes de J-Line ! Vous...",
-    link: "/actualites/les-chartistes",
-  },
-  {
-    id: 3,
-    image: "/img/accords-essentiels.jpg",
-    title: "NOUVEAU - Accords Essentiels",
-    description: "Voici Accords Essentiels de J-Line, une collection fascinante...",
-    link: "/actualites/accords-essentiels",
-  },
-];
 
 export function Home() {
-  const [categories, setCategories] = useState([]); // État pour stocker les catégories
   const [categoriesEnVedette, setCategoriesEnVedette] = useState([]); // État pour les catégories en vedette
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const { user, isFirstLogin, isAuthenticated } = useAuth();
+  const { isFirstLogin, isAuthenticated } = useAuth();
   const [carrouselSlides, setCarrouselSlides] = useState([]);
   const [isCarouselLoading, setIsCarouselLoading] = useState(true);
   const [carouselError, setCarouselError] = useState(null);
@@ -108,87 +47,17 @@ export function Home() {
 
   const navigate = useNavigate();
 
-  // Load CSS for carousel only if not already loaded
+  // We'll use a simpler approach for CSS loading
+  // The slick carousel CSS is now included in the main CSS file or index.html
   useEffect(() => {
-    // Function to check if a CSS file is already loaded
-    const isCSSLoaded = (href) => {
-      const links = document.querySelectorAll('link[rel="stylesheet"]');
-      for (let i = 0; i < links.length; i++) {
-        if (links[i].href.includes(href)) {
-          return true;
-        }
-      }
-      return false;
-    };
-
-    // Function to load CSS asynchronously
-    const loadCSS = (href, integrity = null, crossOrigin = null) => {
-      // Skip if already loaded
-      if (isCSSLoaded(href)) {
-        return Promise.resolve(null);
-      }
-
-      return new Promise((resolve, reject) => {
-        const link = document.createElement('link');
-        link.href = href;
-        link.rel = 'stylesheet';
-        if (integrity) link.integrity = integrity;
-        if (crossOrigin) link.crossOrigin = crossOrigin;
-
-        link.onload = () => resolve(link);
-        link.onerror = () => reject(new Error(`Failed to load CSS: ${href}`));
-
-        document.head.appendChild(link);
-      });
-    };
-
-    // Load only Slick Carousel CSS which is needed for the carousel
-    const loadCarouselCSS = async () => {
-      try {
-        // Load Slick Carousel CSS
-        const slickCSS = loadCSS('https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick.css');
-        const slickThemeCSS = loadCSS('https://cdn.jsdelivr.net/npm/slick-carousel@1.8.1/slick/slick-theme.css');
-
-        // Wait for CSS to load
-        await Promise.all([slickCSS, slickThemeCSS].filter(Boolean));
-        console.log('Carousel CSS loaded successfully');
-      } catch (error) {
-        console.error('Error loading CSS:', error);
-      }
-    };
-
-    // Use requestIdleCallback to load CSS during browser idle time
-    if (window.requestIdleCallback) {
-      window.requestIdleCallback(() => loadCarouselCSS());
-    } else {
-      // Fallback for browsers that don't support requestIdleCallback
-      setTimeout(loadCarouselCSS, 100);
-    }
-
-    // Cleanup function to remove CSS when component unmounts
-    return () => {
-      const links = document.querySelectorAll('link[href*="slick"]');
-      links.forEach(link => {
-        if (document.head.contains(link)) {
-          document.head.removeChild(link);
-        }
-      });
-    };
+    // Add any component initialization logic here if needed
+    // This keeps the component lifecycle hook for future use
   }, []);
 
-  // Utilisation de useEffect pour récupérer les catégories via notre service API optimisé
+  // Afficher la modale si c'est la première connexion
   useEffect(() => {
-    // Use the cached API service
-    apiService.get('/categories')
-      .then((data) => {
-        setCategories(data);
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la récupération des catégories:", error);
-      });
-
     if (isFirstLogin) {
-      setIsModalOpen(true); // Afficher la modale si c'est la première connexion
+      setIsModalOpen(true);
     }
   }, [isFirstLogin]);
 
@@ -289,78 +158,25 @@ export function Home() {
 
       {/* 🔹 HERO CAROUSEL - Enhanced with better styling */}
       <section className="relative w-full overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute -bottom-16 left-1/2 transform -translate-x-1/2 w-full max-w-7xl mx-auto z-10 pointer-events-none">
-          <div className="h-16 bg-gradient-to-t from-white to-transparent"></div>
-        </div>
-
-        {/* Loading state with elegant spinner */}
-        {isCarouselLoading && (
-          <div className="h-[600px] flex items-center justify-center bg-gray-50">
-            <LoadingSpinner
-              size="lg"
-              variant="elegant"
-              message="Chargement du carrousel..."
-              color="#A67B5B"
-            />
-          </div>
-        )}
-
-        {/* Error state */}
-        {carouselError && !isCarouselLoading && (
-          <div className="h-[600px] flex flex-col items-center justify-center bg-gray-50 px-4">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-300 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1} d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-            </svg>
-            <p className="text-gray-500 text-center max-w-md">{carouselError}</p>
-            <button
-              onClick={() => window.location.reload()}
-              className="mt-4 px-4 py-2 bg-[#A67B5B] text-white rounded-lg text-sm hover:bg-[#8B5A2B] transition-colors duration-300"
-            >
-              Réessayer
-            </button>
-          </div>
-        )}
-
-        {/* Carousel */}
-        {!isCarouselLoading && !carouselError && (
-          <div className="relative">
-            <OptimizedCarousel
-              slides={carrouselSlides}
-              settings={{
-                ...heroSettings,
-                arrows: true,
-                autoplaySpeed: 6000,
-                speed: 1000,
-                cssEase: 'cubic-bezier(0.45, 0, 0.2, 1)'
-              }}
-              loading={false}
-              error={null}
-              emptyMessage="Aucune diapositive disponible"
-              height="600px"
-              className="hero-carousel"
-            />
-
-            {/* Custom navigation dots */}
-            <div className="absolute bottom-8 left-0 right-0 z-10 flex justify-center">
-              <div className="bg-white/30 backdrop-blur-sm px-4 py-2 rounded-full">
-                {carrouselSlides.map((_, index) => (
-                  <button
-                    key={index}
-                    className={`w-3 h-3 rounded-full mx-1 transition-all duration-300 ${
-                      index === 0 ? 'bg-[#A67B5B]' : 'bg-gray-300 hover:bg-[#A67B5B]/50'
-                    }`}
-                    aria-label={`Aller à la diapositive ${index + 1}`}
-                  />
-                ))}
-              </div>
-            </div>
-          </div>
-        )}
+        {/* Optimized Carousel Component */}
+        <OptimizedCarousel
+          slides={carrouselSlides}
+          settings={{
+            ...heroSettings,
+            arrows: true,
+            autoplaySpeed: 6000,
+            speed: 1000,
+            cssEase: 'cubic-bezier(0.45, 0, 0.2, 1)'
+          }}
+          loading={isCarouselLoading}
+          error={carouselError}
+          emptyMessage="Aucune diapositive disponible"
+          className="hero-carousel"
+        />
       </section>
 
       {/* 🔹 CATEGORIES EN VEDETTE - Enhanced */}
-      <section className="py-24 px-6 overflow-hidden bg-gradient-to-b from-white to-gray-50 relative">
+      <section className="pt-16 pb-24 px-6 overflow-hidden bg-gradient-to-b from-white to-gray-50 relative">
         {/* Decorative elements */}
         <div className="absolute top-0 left-0 w-full h-24 bg-gradient-to-b from-white to-transparent pointer-events-none"></div>
         <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#A67B5B]/5 rounded-full blur-3xl"></div>
@@ -535,18 +351,18 @@ export function Home() {
         </div>
       </section>
 
-      {/* 🔹 NEWSLETTER SECTION - Compact design */}
-      <section className="py-16 px-6 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
+      {/* 🔹 NEWSLETTER SECTION - More compact design with less empty space */}
+      <section className="py-12 px-6 bg-gradient-to-b from-white to-gray-50 relative overflow-hidden">
         {/* Decorative elements */}
         <div className="absolute inset-0 bg-[url('/img/texture-bg.jpg')] opacity-5"></div>
         <div className="absolute -top-24 -right-24 w-64 h-64 bg-[#A67B5B]/5 rounded-full blur-3xl"></div>
         <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-[#A67B5B]/5 rounded-full blur-3xl"></div>
 
-        <div className="max-w-5xl mx-auto relative z-10">
+        <div className="max-w-4xl mx-auto relative z-10">
           <div className="bg-white rounded-xl shadow-lg overflow-hidden transform transition-all duration-500 hover:shadow-xl">
-            <div className="p-8 md:p-10">
-              <div className="text-center mb-6">
-                <h2 className="text-2xl md:text-3xl font-light tracking-wide mb-3 relative inline-block">
+            <div className="p-6 md:p-8">
+              <div className="text-center mb-4">
+                <h2 className="text-2xl font-light tracking-wide mb-2 relative inline-block">
                   <span className="relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-16 after:h-0.5 after:bg-[#A67B5B] after:transition-all after:duration-700 hover:after:w-full pb-2">
                     Newsletter
                   </span>
@@ -587,9 +403,9 @@ export function Home() {
                 </div>
               </form>
 
-              <div className="mt-6 flex flex-wrap justify-center gap-6">
+              <div className="mt-4 flex flex-wrap justify-center gap-4">
                 <div className="flex items-center">
-                  <div className="w-6 h-6 rounded-full bg-[#A67B5B]/10 flex items-center justify-center mr-2 flex-shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-[#A67B5B]/10 flex items-center justify-center mr-1 flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-[#A67B5B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
@@ -598,7 +414,7 @@ export function Home() {
                 </div>
 
                 <div className="flex items-center">
-                  <div className="w-6 h-6 rounded-full bg-[#A67B5B]/10 flex items-center justify-center mr-2 flex-shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-[#A67B5B]/10 flex items-center justify-center mr-1 flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-[#A67B5B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>
@@ -607,7 +423,7 @@ export function Home() {
                 </div>
 
                 <div className="flex items-center">
-                  <div className="w-6 h-6 rounded-full bg-[#A67B5B]/10 flex items-center justify-center mr-2 flex-shrink-0">
+                  <div className="w-5 h-5 rounded-full bg-[#A67B5B]/10 flex items-center justify-center mr-1 flex-shrink-0">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-[#A67B5B]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                       <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                     </svg>

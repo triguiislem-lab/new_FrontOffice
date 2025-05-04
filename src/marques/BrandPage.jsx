@@ -33,14 +33,46 @@ const BrandPage = () => {
   const [showFilters, setShowFilters] = useState(true);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
 
+  // Reset states when brand ID changes
+  useEffect(() => {
+    // Reset states when brand ID changes to prevent showing old data
+    setLoading(true);
+    setProducts([]);
+    setFilteredProducts([]);
+    setBrand(null);
+
+    // Reset filters when changing brands
+    setSearchTerm('');
+    setSelectedCategories([]);
+    setPriceRange([0, 1000]);
+    setSortOrder('default');
+
+    // Scroll to top when changing brands
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  // Fetch brand and products data
   useEffect(() => {
     const fetchBrandAndProducts = async () => {
+      if (!id) return;
+
       try {
+        // First fetch the brand data
         const brandRes = await axios.get(`https://laravel-api.fly.dev/api/marques/${id}`);
         setBrand(brandRes.data);
 
+        // Then fetch the products for this brand
         const productsRes = await axios.get(`https://laravel-api.fly.dev/api/marques/${id}/produits`);
-        // Pour chaque produit, récupérer ses images via l'API images
+
+        if (!productsRes.data || productsRes.data.length === 0) {
+          // If no products, set empty arrays and stop loading
+          setProducts([]);
+          setFilteredProducts([]);
+          setLoading(false);
+          return;
+        }
+
+        // For each product, fetch its images
         const productsWithImages = await Promise.all(
           productsRes.data.map(async (product) => {
             try {
@@ -60,6 +92,7 @@ const BrandPage = () => {
                 image_produit: imageUrl || '/img/placeholder-product.jpg'
               };
             } catch (imgErr) {
+              console.error(`Error fetching image for product ${product.id}:`, imgErr);
               return {
                 ...product,
                 image_produit: '/img/placeholder-product.jpg'
@@ -67,6 +100,7 @@ const BrandPage = () => {
             }
           })
         );
+
         setProducts(productsWithImages);
         setFilteredProducts(productsWithImages);
         setLoading(false);
@@ -76,6 +110,11 @@ const BrandPage = () => {
       }
     };
 
+    fetchBrandAndProducts();
+  }, [id]);
+
+  // Fetch categories (only once)
+  useEffect(() => {
     const fetchCategories = async () => {
       try {
         const categoriesRes = await axios.get('https://laravel-api.fly.dev/api/categories');
@@ -85,56 +124,63 @@ const BrandPage = () => {
       }
     };
 
-    fetchBrandAndProducts();
     fetchCategories();
-  }, [id]);
+  }, []);
 
   useEffect(() => {
+    // Skip filtering if we're in the main loading state or if products array is empty
+    if (loading || products.length === 0) {
+      return;
+    }
+
     setLoadingProducts(true);
-    let updated = [...products];
-    let filterCount = 0;
 
-    // Filter by search term
-    if (searchTerm.trim() !== '') {
-      updated = updated.filter((p) =>
-        p.nom_produit.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-      filterCount++;
-    }
+    // Use a timeout to ensure the loading state is visible
+    const filterTimeout = setTimeout(() => {
+      let updated = [...products];
+      let filterCount = 0;
 
-    // Filter by selected categories
-    if (selectedCategories.length > 0) {
-      updated = updated.filter((p) => selectedCategories.includes(p.categorie_id));
-      filterCount += selectedCategories.length;
-    }
+      // Filter by search term
+      if (searchTerm.trim() !== '') {
+        updated = updated.filter((p) =>
+          p.nom_produit.toLowerCase().includes(searchTerm.toLowerCase())
+        );
+        filterCount++;
+      }
 
-    // Filter by price range
-    if (priceRange[0] > 0 || priceRange[1] < 1000) {
-      updated = updated.filter(
-        (p) => p.prix_produit >= priceRange[0] && p.prix_produit <= priceRange[1]
-      );
-      filterCount++;
-    }
+      // Filter by selected categories
+      if (selectedCategories.length > 0) {
+        updated = updated.filter((p) => selectedCategories.includes(p.categorie_id));
+        filterCount += selectedCategories.length;
+      }
 
-    // Sort products
-    if (sortOrder === 'asc') {
-      updated.sort((a, b) => a.prix_produit - b.prix_produit);
-    } else if (sortOrder === 'desc') {
-      updated.sort((a, b) => b.prix_produit - a.prix_produit);
-    } else if (sortOrder === 'name_asc') {
-      updated.sort((a, b) => a.nom_produit.localeCompare(b.nom_produit));
-    } else if (sortOrder === 'name_desc') {
-      updated.sort((a, b) => b.nom_produit.localeCompare(a.nom_produit));
-    }
+      // Filter by price range
+      if (priceRange[0] > 0 || priceRange[1] < 1000) {
+        updated = updated.filter(
+          (p) => p.prix_produit >= priceRange[0] && p.prix_produit <= priceRange[1]
+        );
+        filterCount++;
+      }
 
-    setActiveFilters(filterCount);
-    setFilteredProducts(updated);
+      // Sort products
+      if (sortOrder === 'asc') {
+        updated.sort((a, b) => a.prix_produit - b.prix_produit);
+      } else if (sortOrder === 'desc') {
+        updated.sort((a, b) => b.prix_produit - a.prix_produit);
+      } else if (sortOrder === 'name_asc') {
+        updated.sort((a, b) => a.nom_produit.localeCompare(b.nom_produit));
+      } else if (sortOrder === 'name_desc') {
+        updated.sort((a, b) => b.nom_produit.localeCompare(a.nom_produit));
+      }
 
-    // Simulate loading for better UX
-    setTimeout(() => {
+      setActiveFilters(filterCount);
+      setFilteredProducts(updated);
       setLoadingProducts(false);
-    }, 300);
-  }, [searchTerm, sortOrder, selectedCategories, priceRange, products]);
+    }, 500); // Slightly longer timeout for better UX
+
+    // Clean up the timeout if the component unmounts or dependencies change
+    return () => clearTimeout(filterTimeout);
+  }, [searchTerm, sortOrder, selectedCategories, priceRange, products, loading]);
 
   // Handle category filter change
   const handleCategoryChange = (categoryId) => {
@@ -195,10 +241,15 @@ const BrandPage = () => {
 
   // Loading state with elegant animation
   if (loading) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-      <div className="text-center max-w-md mx-auto px-4">
-        <LoadingSpinner size="lg" variant="elegant" color="#A67B5B" />
-        <p className="mt-6 text-gray-600 font-light tracking-wide">Chargement des produits de la marque...</p>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center" key={`brand-loading-${id}`}>
+      <div className="text-center max-w-md mx-auto px-4 py-12 bg-white rounded-lg shadow-md">
+        <LoadingSpinner
+          size="lg"
+          variant="elegant"
+          color="#A67B5B"
+          message="Chargement des produits de la marque..."
+          showLoadingLine={true}
+        />
         <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-6 opacity-30"></div>
         <p className="text-sm text-gray-500 font-light">Veuillez patienter pendant que nous préparons votre expérience de shopping</p>
       </div>
@@ -207,7 +258,7 @@ const BrandPage = () => {
 
   // Error state
   if (!brand) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center" key={`brand-error-${id}`}>
       <div className="text-center max-w-md mx-auto px-4 py-12 bg-white rounded-lg shadow-lg">
         <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
           <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -215,34 +266,49 @@ const BrandPage = () => {
           </svg>
         </div>
         <h2 className="text-2xl font-light text-gray-800 mb-4">Marque introuvable</h2>
-        <p className="text-gray-600 mb-8">Nous n'avons pas pu trouver la marque que vous recherchez.</p>
+        <p className="text-gray-600 mb-4">Nous n'avons pas pu trouver la marque que vous recherchez.</p>
+        <p className="text-sm text-gray-500 mb-8">ID de marque: {id}</p>
         <button
-          onClick={() => navigate('/marques')}
-          className="inline-block font-light text-white border-[0.5px] border-[#A67B5B] bg-[#A67B5B] px-8 py-3 text-sm tracking-wider hover:bg-[#8B5A2B] transition-all duration-300 shadow-md hover:shadow-lg"
+          onClick={() => navigate('/marque')}
+          className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300"
         >
-          RETOUR AUX MARQUES
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Retour aux marques</span>
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-serif">
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-serif" key={`brand-page-${id}`}>
       <style dangerouslySetInnerHTML={{ __html: brandPageStyles }} />
       {/* Section de logo de la marque améliorée */}
-      <section className="text-center py-16 bg-gradient-to-b from-white to-[#F9F7F5] shadow-lg rounded-lg mb-12 relative overflow-hidden">
+      <section className="text-center py-16 bg-gradient-to-b from-white to-gray-50 shadow-md rounded-lg mb-12 relative overflow-hidden">
         <div className="absolute inset-0 opacity-5 bg-pattern"></div>
+        <div className="absolute -top-40 -right-40 w-80 h-80 bg-[#A67B5B]/5 rounded-full blur-3xl"></div>
+        <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-[#A67B5B]/5 rounded-full blur-3xl"></div>
+
         <div className="relative z-10">
           <div className="mb-8 transform transition-all duration-500 hover:scale-105">
             <img
               src={brand.logo_marque}
               alt={`${brand.nom_marque} Logo`}
               className="mx-auto w-48 h-48 object-contain border-4 border-[#A67B5B] rounded-full shadow-xl bg-white p-2"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = '/img/placeholder.jpg';
+              }}
             />
           </div>
-          <h1 className="text-5xl font-extrabold text-[#A67B5B] tracking-wide mb-4">{brand.nom_marque}</h1>
+          <h1 className="text-4xl font-light tracking-widest mb-4 text-[#A67B5B] relative inline-block">
+            <span className="relative after:content-[''] after:absolute after:bottom-0 after:left-0 after:w-16 after:h-0.5 after:bg-[#A67B5B] after:transition-all after:duration-700 hover:after:w-full pb-2">
+              {brand.nom_marque}
+            </span>
+          </h1>
           {brand.description_marque && (
-            <p className="max-w-2xl mx-auto text-gray-600 italic font-light px-4">
+            <p className="max-w-2xl mx-auto text-gray-600 font-light px-4 leading-relaxed mt-6">
               {brand.description_marque}
             </p>
           )}
@@ -339,8 +405,16 @@ const BrandPage = () => {
         {/* Liste des produits */}
         <main className="w-full md:w-3/4">
           {loadingProducts ? (
-            <div className="flex justify-center items-center h-64">
-              <LoadingSpinner size="lg" variant="elegant" color="#A67B5B" />
+            <div className="flex flex-col justify-center items-center h-64 bg-white rounded-lg shadow-sm p-8">
+              <LoadingSpinner
+                size="lg"
+                variant="elegant"
+                color="#A67B5B"
+                message="Chargement des produits..."
+                showLoadingLine={true}
+              />
+              <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-4 opacity-30"></div>
+              <p className="text-sm text-gray-500 font-light">Veuillez patienter pendant que nous préparons les produits</p>
             </div>
           ) : filteredProducts.length === 0 ? (
             <div className="text-center py-16 bg-white rounded-lg shadow-sm">
@@ -416,12 +490,12 @@ const BrandPage = () => {
                           <span className="text-lg font-bold text-[#A67B5B]">{product.prix_produit} TD</span>
                           <p className="text-sm text-gray-500 mt-2">Référence: {product.reference}</p>
                           <button
-                            className="bg-[#A67B5B] text-white py-2 px-8 rounded-full text-sm font-medium hover:bg-[#8B5A2B] focus:outline-none focus:ring-2 focus:ring-[#C9B6A5] shadow-md hover:shadow-lg transition-all duration-300 mt-4 w-full flex items-center justify-center"
+                            className="bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300 mt-4 w-full flex items-center justify-center"
                             onClick={() => navigate(`/article/${product.id}`)}
                           >
                             <span>Détails</span>
-                            <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                             </svg>
                           </button>
                         </div>
@@ -471,12 +545,12 @@ const BrandPage = () => {
                               </svg>
                             </button>
                             <button
-                              className="bg-[#A67B5B] text-white py-2 px-6 rounded-full text-sm font-medium hover:bg-[#8B5A2B] focus:outline-none focus:ring-2 focus:ring-[#C9B6A5] shadow-md hover:shadow-lg transition-all duration-300 flex items-center"
+                              className="bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300 flex items-center"
                               onClick={() => navigate(`/article/${product.id}`)}
                             >
                               <span>Voir détails</span>
-                              <svg className="w-4 h-4 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" />
                               </svg>
                             </button>
                           </div>

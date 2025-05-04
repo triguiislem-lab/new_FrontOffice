@@ -3,6 +3,100 @@ import axios from 'axios';
 import { Link } from 'react-router-dom';
 import LoadingSpinner from "../Components/LoadingSpinner";
 
+// Custom CSS for animations and styling
+const customStyles = `
+  /* Loading animations */
+  @keyframes pulse-width {
+    0% { width: 15%; }
+    50% { width: 85%; }
+    100% { width: 15%; }
+  }
+
+  .animate-pulse-width {
+    animation: pulse-width 2s ease-in-out infinite;
+  }
+
+  .skeleton-pulse {
+    animation: skeleton-pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes skeleton-pulse {
+    0% { opacity: 0.6; }
+    50% { opacity: 0.8; }
+    100% { opacity: 0.6; }
+  }
+
+  /* Card hover effects */
+  .promo-card {
+    transition: all 0.3s ease;
+  }
+
+  .promo-card:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  }
+
+  .promo-card .image-container img {
+    transition: transform 0.5s ease;
+  }
+
+  .promo-card:hover .image-container img {
+    transform: scale(1.05);
+  }
+
+  /* Badge styling */
+  .discount-badge {
+    position: absolute;
+    top: 0;
+    left: 0;
+    background-color: #FEF2F2;
+    color: #EF4444;
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    z-index: 10;
+  }
+
+  .event-badge {
+    position: absolute;
+    top: 0;
+    right: 0;
+    font-weight: 500;
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    z-index: 10;
+    color: white;
+  }
+
+  /* Filter styling */
+  .filter-button {
+    transition: all 0.2s ease;
+  }
+
+  .filter-button:hover {
+    background-color: #F3F4F6;
+  }
+
+  .filter-button.active {
+    background-color: #111827;
+    color: white;
+  }
+
+  /* Improved scrollbar for filter section */
+  .hide-scrollbar::-webkit-scrollbar {
+    height: 4px;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar-track {
+    background: #F3F4F6;
+  }
+
+  .hide-scrollbar::-webkit-scrollbar-thumb {
+    background: #A67B5B;
+    border-radius: 2px;
+  }
+`;
+
 function Promotions() {
   const [promotions, setPromotions] = useState([]);
   const [featuredPromotions, setFeaturedPromotions] = useState([]);
@@ -594,30 +688,36 @@ function Promotions() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-serif">
-      <br /><br />
-      <div className="relative overflow-hidden bg-gradient-to-b from-gold to-transparent py-24">
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-serif" key="promotions-page">
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
+
+      {/* Enhanced Hero Section with parallax effect */}
+      <div className="relative overflow-hidden bg-gradient-to-b from-[#A67B5B] to-transparent py-28">
         <div className="absolute inset-0 bg-pattern opacity-10 transform scale-110 rotate-3"></div>
+        <div className="absolute inset-0 bg-[url('/img/texture-overlay.png')] opacity-5"></div>
         <div className="container mx-auto px-4 relative z-10">
           <div className="text-center">
-            <h1 className="text-5xl font-extralight tracking-widest mb-2 transition-all duration-700 transform">NOS PROMOTIONS</h1>
-            <div className="w-24 h-px bg-yellow-700 mx-auto my-6"></div>
-            <p className="max-w-2xl mx-auto text-gray-600 font-light leading-relaxed text-lg">
-              Découvrez nos offres exclusives et profitez de réductions exceptionnelles !
+            <h1 className="text-5xl font-extralight tracking-widest mb-4 transition-all duration-700 transform text-white">
+              NOS PROMOTIONS
+            </h1>
+            <div className="w-24 h-px bg-white mx-auto my-6 opacity-70"></div>
+            <p className="max-w-2xl mx-auto text-white text-opacity-90 font-light leading-relaxed text-lg">
+              Découvrez nos offres exclusives et profitez de réductions exceptionnelles sur nos collections !
             </p>
           </div>
         </div>
+        <div className="absolute bottom-0 left-0 right-0 h-16 bg-gradient-to-t from-gray-50 to-transparent"></div>
       </div>
 
-      {/* Navigation bar with filters - Horizontal scrollable version */}
-      <div className="border-b border-gray-200 sticky top-0 bg-white z-20">
+      {/* Enhanced Navigation bar with filters - Horizontal scrollable version */}
+      <div className="border-b border-gray-200 sticky top-0 bg-white z-20 shadow-sm">
         <div className="container mx-auto">
           {/* Main filters - Always visible */}
           <div className="flex justify-center items-center text-center border-b">
             <button
               onClick={() => handleFilterChange('-30')}
               className={`text-sm uppercase tracking-wider py-4 px-6 border-b-2 transition-all ${
-                activeFilter === '-30' ? 'border-black text-black font-medium' : 'border-transparent text-gray-500 hover:text-black'
+                activeFilter === '-30' ? 'border-[#A67B5B] text-[#A67B5B] font-medium' : 'border-transparent text-gray-500 hover:text-[#A67B5B]'
               }`}
             >
               LA SÉLECTION À -30%
@@ -625,7 +725,7 @@ function Promotions() {
             <button
               onClick={() => handleFilterChange('-20')}
               className={`text-sm uppercase tracking-wider py-4 px-6 border-b-2 transition-all ${
-                activeFilter === '-20' ? 'border-black text-black font-medium' : 'border-transparent text-gray-500 hover:text-black'
+                activeFilter === '-20' ? 'border-[#A67B5B] text-[#A67B5B] font-medium' : 'border-transparent text-gray-500 hover:text-[#A67B5B]'
               }`}
             >
               LA SÉLECTION À -20%
@@ -633,7 +733,7 @@ function Promotions() {
             <button
               onClick={() => handleFilterChange('tous')}
               className={`text-sm uppercase tracking-wider py-4 px-6 border-b-2 transition-all ${
-                activeFilter === 'tous' ? 'border-black text-black font-medium' : 'border-transparent text-gray-500 hover:text-black'
+                activeFilter === 'tous' ? 'border-[#A67B5B] text-[#A67B5B] font-medium' : 'border-transparent text-gray-500 hover:text-[#A67B5B]'
               }`}
             >
               TOUTES LES PROMOTIONS
@@ -646,15 +746,15 @@ function Promotions() {
             <div className="absolute left-0 top-0 bottom-0 w-8 bg-gradient-to-r from-white to-transparent z-10 pointer-events-none"></div>
 
             {/* Scrollable container */}
-            <div className="flex overflow-x-auto py-3 px-4 hide-scrollbar">
+            <div className="flex overflow-x-auto py-4 px-4 hide-scrollbar">
               {Array.isArray(categories) && categories.map((category) => (
                 <button
                   key={category.id}
                   onClick={() => handleFilterChange(category.id)}
-                  className={`text-xs uppercase tracking-wider py-2 px-4 mx-1 whitespace-nowrap border rounded-full transition-all flex-shrink-0 ${
+                  className={`text-xs uppercase tracking-wider py-2 px-5 mx-1.5 whitespace-nowrap border rounded-full transition-all flex-shrink-0 filter-button ${
                     activeFilter === category.id
-                      ? 'border-black bg-black text-white font-medium'
-                      : 'border-gray-300 text-gray-500 hover:border-gray-500 hover:text-black hover:bg-[#C0A080]'
+                      ? 'border-[#A67B5B] bg-[#A67B5B] text-white font-medium'
+                      : 'border-gray-200 text-gray-600 hover:border-[#A67B5B] hover:text-[#A67B5B]'
                   }`}
                 >
                   {category.nom_categorie || category.nom || `Catégorie ${category.id}`}
@@ -665,64 +765,47 @@ function Promotions() {
             {/* Right shadow gradient for scroll indication */}
             <div className="absolute right-0 top-0 bottom-0 w-8 bg-gradient-to-l from-white to-transparent z-10 pointer-events-none"></div>
           </div>
-
-          {/* Add some CSS for hiding scrollbar but keeping functionality */}
-          <style jsx="true">{`
-            .hide-scrollbar {
-              -ms-overflow-style: none;  /* IE and Edge */
-              scrollbar-width: none;     /* Firefox */
-            }
-            .hide-scrollbar::-webkit-scrollbar {
-              display: none;             /* Chrome, Safari, Opera */
-            }
-          `}</style>
         </div>
       </div>
 
-      {/* Brand and Event filter section */}
+      {/* Enhanced Brand and Event filter section */}
       <div className="container mx-auto py-8">
-        <div className="flex flex-wrap justify-center gap-8">
-          {/* Brands dropdown with horizontal display */}
+        <div className="flex flex-wrap justify-center gap-6">
+          {/* Brands dropdown with improved styling */}
           <div className="relative" ref={marqueDropdownRef}>
             <button
               id="marque-dropdown-button"
               onClick={toggleMarqueDropdown}
               aria-haspopup="true"
               aria-expanded={isMarqueDropdownOpen}
-              className={`text-sm uppercase tracking-wider px-4 py-2 border-b flex items-center gap-2 ${isMarqueDropdownOpen ? 'border-gray-500' : 'border-transparent hover:border-gray-300'}`}
+              className={`text-sm uppercase tracking-wider px-5 py-2.5 border flex items-center gap-2 rounded-md transition-all ${
+                isMarqueDropdownOpen
+                  ? 'border-[#A67B5B] text-[#A67B5B] bg-[#A67B5B]/5'
+                  : 'border-gray-200 hover:border-[#A67B5B] hover:text-[#A67B5B]'
+              }`}
             >
-              MARQUE
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`transition-transform duration-200 ${isMarqueDropdownOpen ? 'transform rotate-180' : ''}`}
-              >
-                <polyline points="6 9 12 15 18 9"></polyline>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
+              MARQUE
             </button>
             {isMarqueDropdownOpen && (
               <div
                 id="marque-dropdown-menu"
                 aria-labelledby="marque-dropdown-button"
-                className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded py-2 z-20 max-h-80 overflow-y-auto">
+                className="absolute left-0 mt-2 w-56 bg-white shadow-lg rounded-md py-2 z-20 max-h-80 overflow-y-auto border border-gray-100">
                 <button
                   onClick={() => handleMarqueChange('')}
-                  className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${selectedMarque === '' ? 'font-medium' : ''}`}
+                  className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-50 ${selectedMarque === '' ? 'font-medium text-[#A67B5B]' : ''}`}
                 >
                   Toutes les marques
                 </button>
+                <div className="border-t border-gray-100 my-1"></div>
                 {Array.isArray(marques) && marques.map(marque => (
                   <button
                     key={marque.id}
                     onClick={() => handleMarqueChange(marque.id)}
-                    className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${selectedMarque === marque.id ? 'font-medium' : ''}`}
+                    className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-50 ${selectedMarque === marque.id ? 'font-medium text-[#A67B5B]' : ''}`}
                   >
                     {marque.nom_marque || marque.nom || `Marque ${marque.id}`}
                   </button>
@@ -731,53 +814,47 @@ function Promotions() {
             )}
           </div>
 
-          {/* Events dropdown with horizontal display */}
+          {/* Events dropdown with improved styling */}
           <div className="relative" ref={evenementDropdownRef}>
             <button
               id="evenement-dropdown-button"
               onClick={toggleEvenementDropdown}
               aria-haspopup="true"
               aria-expanded={isEvenementDropdownOpen}
-              className={`text-sm uppercase tracking-wider px-4 py-2 border-b flex items-center gap-2 ${isEvenementDropdownOpen ? 'border-gray-500' : 'border-transparent hover:border-gray-300'}`}
+              className={`text-sm uppercase tracking-wider px-5 py-2.5 border flex items-center gap-2 rounded-md transition-all ${
+                isEvenementDropdownOpen
+                  ? 'border-[#A67B5B] text-[#A67B5B] bg-[#A67B5B]/5'
+                  : 'border-gray-200 hover:border-[#A67B5B] hover:text-[#A67B5B]'
+              }`}
             >
-              ÉVÉNEMENT
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                className={`transition-transform duration-200 ${isEvenementDropdownOpen ? 'transform rotate-180' : ''}`}
-              >
-                <polyline points="6 9 12 15 18 9"></polyline>
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
               </svg>
+              ÉVÉNEMENT
             </button>
             {isEvenementDropdownOpen && (
               <div
                 id="evenement-dropdown-menu"
                 aria-labelledby="evenement-dropdown-button"
-                className="absolute left-0 mt-2 w-48 bg-white shadow-lg rounded py-2 z-20">
+                className="absolute left-0 mt-2 w-56 bg-white shadow-lg rounded-md py-2 z-20 border border-gray-100">
                 <button
                   onClick={() => handleEvenementChange('')}
-                  className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${selectedEvenement === '' ? 'font-medium' : ''}`}
+                  className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-50 ${selectedEvenement === '' ? 'font-medium text-[#A67B5B]' : ''}`}
                 >
                   Tous les événements
                 </button>
+                <div className="border-t border-gray-100 my-1"></div>
                 {Array.isArray(evenements) && evenements.map(evenement => (
                   <button
                     key={evenement.id}
                     onClick={() => handleEvenementChange(evenement.id)}
-                    className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-100 ${selectedEvenement === evenement.id ? 'font-medium' : ''}`}
+                    className={`block px-4 py-2 text-sm text-left w-full hover:bg-gray-50 ${selectedEvenement === evenement.id ? 'font-medium text-[#A67B5B]' : ''}`}
                   >
                     {/* Display event with color indicator if available */}
                     <div className="flex items-center">
                       {evenement.couleur && (
                         <span
-                          className="inline-block w-3 h-3 rounded-full mr-2"
+                          className="inline-block w-4 h-4 rounded-full mr-2"
                           style={{ backgroundColor: evenement.couleur }}
                         ></span>
                       )}
@@ -799,25 +876,36 @@ function Promotions() {
                 setIsMarqueDropdownOpen(false);
                 setIsEvenementDropdownOpen(false);
               }}
-              className="text-sm uppercase tracking-wider px-4 py-2 text-gray-600 hover:text-black"
+              className="text-sm uppercase tracking-wider px-5 py-2.5 text-gray-600 hover:text-[#A67B5B] border border-transparent hover:border-gray-200 rounded-md transition-all flex items-center"
             >
-              RÉINITIALISER LES FILTRES
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              RÉINITIALISER
             </button>
           )}
         </div>
       </div>
 
-      {/* Featured Promotions Section */}
+      {/* Featured Promotions Section - Enhanced */}
       {featuredPromotions.length > 0 && (
-        <div className="container mx-auto px-4 py-12">
-          <div className="mb-8">
-            <h2 className="text-3xl font-light text-center mb-2">Promotions Vedettes</h2>
-            <div className="w-16 h-px bg-yellow-700 mx-auto mb-8"></div>
+        <div className="container mx-auto px-4 py-16">
+          <div className="mb-10">
+            <h2 className="text-3xl font-light text-center mb-3">Promotions Vedettes</h2>
+            <div className="w-20 h-0.5 bg-[#A67B5B] mx-auto mb-8"></div>
+            <p className="text-center text-gray-600 max-w-2xl mx-auto">Découvrez nos offres exclusives sélectionnées spécialement pour vous</p>
           </div>
 
           {isFeaturedLoading ? (
-            <div className="flex justify-center items-center py-12">
-              <LoadingSpinner size="md" variant="circle" />
+            <div className="flex flex-col justify-center items-center py-12">
+              <div className="text-center max-w-md mx-auto px-6 py-10 bg-white rounded-lg shadow-md">
+                <LoadingSpinner size="md" variant="elegant" color="#A67B5B" />
+                <p className="mt-5 text-gray-600 font-light tracking-wide">Chargement des promotions vedettes...</p>
+                <div className="w-12 h-[0.5px] bg-[#A67B5B] mx-auto my-4 opacity-30"></div>
+                <div className="mt-4 w-full bg-gray-100 h-1.5 rounded-full overflow-hidden">
+                  <div className="h-full bg-[#A67B5B] animate-pulse-width"></div>
+                </div>
+              </div>
             </div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
@@ -829,12 +917,12 @@ function Promotions() {
                 const prixRemise = calculerPrixRemise(prixOriginal, parseFloat(promotion.valeur));
 
                 return (
-                  <div key={`featured-${promotion.id}`} className="group bg-white shadow-lg hover:shadow-xl transition-shadow overflow-hidden">
-                    <div className="relative mb-4 overflow-hidden">
+                  <div key={`featured-${promotion.id}`} className="promo-card bg-white rounded-lg shadow-md overflow-hidden">
+                    <div className="relative overflow-hidden image-container">
                       {/* Show loading indicator while fetching images */}
                       {imagesLoading && !productImages[produitExemple?.id] && (
                         <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 z-10">
-                          <LoadingSpinner size="sm" variant="circle" />
+                          <LoadingSpinner size="sm" variant="circle" color="#A67B5B" />
                         </div>
                       )}
 
@@ -845,7 +933,7 @@ function Promotions() {
                             (produitExemple?.image_produit || PLACEHOLDER_IMAGE)
                         }
                         alt={produitExemple?.nom_produit || promotion.nom}
-                        className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
+                        className="w-full aspect-square object-cover"
                         onError={(e) => {
                           if (e.target.src.includes('data:image/svg+xml;base64')) return;
                           e.target.onerror = null;
@@ -854,14 +942,14 @@ function Promotions() {
                       />
 
                       {/* Wishlist button */}
-                      <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600">
+                      <button className="absolute top-3 right-3 bg-white p-2 rounded-full shadow-md hover:bg-gray-100 transition-colors z-10">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-600 hover:text-[#A67B5B]">
                           <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                         </svg>
                       </button>
 
-                      {/* Badge de réduction */}
-                      <div className="absolute top-0 left-0 bg-gray-100 text-red-500 text-xs px-2 py-1 font-medium">
+                      {/* Discount badge - Enhanced */}
+                      <div className="discount-badge">
                         {promotion.type === 'montant_fixe'
                           ? `-${parseFloat(promotion.valeur)} DT`
                           : promotion.type === 'gratuit'
@@ -869,10 +957,10 @@ function Promotions() {
                             : `-${parseFloat(promotion.valeur)}%`}
                       </div>
 
-                      {/* Event badge if available */}
+                      {/* Event badge if available - Enhanced */}
                       {promotion.event && (
                         <div
-                          className="absolute top-0 right-0 text-xs px-2 py-1 font-medium text-white"
+                          className="event-badge"
                           style={{ backgroundColor: promotion.event.couleur || '#000000' }}
                         >
                           {promotion.event.nom}
@@ -880,32 +968,35 @@ function Promotions() {
                       )}
                     </div>
 
-                    <div className="p-4">
-                      <h3 className="text-gray-800 text-base mb-1 font-light">
+                    <div className="p-5">
+                      <h3 className="text-gray-800 text-lg mb-2 font-light hover:text-[#A67B5B] transition-colors">
                         {produitExemple?.nom_produit || promotion.nom}
                       </h3>
 
                       {/* Promotion description if available */}
                       {promotion.description && (
-                        <p className="text-gray-500 text-xs mb-2 line-clamp-2">{promotion.description}</p>
+                        <p className="text-gray-500 text-sm mb-3 line-clamp-2">{promotion.description}</p>
                       )}
 
-                      <div className="flex items-center gap-2 mb-3">
-                        <span className="text-base font-medium text-black">{prixRemise} DT</span>
+                      <div className="flex items-center gap-3 mb-4">
+                        <span className="text-lg font-medium text-[#A67B5B]">{prixRemise} DT</span>
                         <span className="text-gray-500 text-sm line-through">{prixOriginal.toFixed(2)} DT</span>
+                        <span className="text-red-500 text-xs font-medium ml-auto">
+                          -{parseFloat(promotion.valeur)}%
+                        </span>
                       </div>
 
                       {/* Promotion dates if available */}
                       {promotion.date_debut && promotion.date_fin && (
-                        <div className="text-gray-500 text-xs mb-2">
-                          Valable du {new Date(promotion.date_debut).toLocaleDateString()} au {new Date(promotion.date_fin).toLocaleDateString()}
+                        <div className="text-gray-500 text-xs mb-4 bg-gray-50 p-2 rounded">
+                          <span className="font-medium">Valable du</span> {new Date(promotion.date_debut).toLocaleDateString()} <span className="font-medium">au</span> {new Date(promotion.date_fin).toLocaleDateString()}
                         </div>
                       )}
 
                       <DynamicButton
                         label="Voir détail"
                         to={produitExemple ? `/article/${produitExemple.id}` : `/promotions/${promotion.id}`}
-                        className="rounded-lg shadow-lg hover:shadow-xl transition-shadow duration-300"
+                        className="w-full py-2.5 bg-[#A67B5B] text-white rounded hover:bg-[#8B5A2B] transition-colors duration-300 flex items-center justify-center"
                       />
                     </div>
                   </div>
@@ -916,14 +1007,51 @@ function Promotions() {
         </div>
       )}
 
-      {/* Regular Promotions Section */}
+      {/* Regular Promotions Section - Enhanced */}
       <div className="container mx-auto px-4 pb-20">
+        <div className="mb-10">
+          <h2 className="text-3xl font-light text-center mb-3">Toutes Nos Promotions</h2>
+          <div className="w-20 h-0.5 bg-[#A67B5B] mx-auto mb-8"></div>
+        </div>
+
         {isLoading ? (
-          <div className="flex justify-center items-center py-20">
-            <LoadingSpinner size="lg" variant="circle" />
+          <div className="flex flex-col justify-center items-center py-16">
+            <div className="text-center max-w-md mx-auto px-6 py-12 bg-white rounded-lg shadow-md">
+              <LoadingSpinner size="lg" variant="elegant" color="#A67B5B" />
+              <p className="mt-6 text-gray-600 font-light tracking-wide">Chargement des promotions...</p>
+              <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-6 opacity-30"></div>
+              <p className="text-sm text-gray-500 font-light">Veuillez patienter pendant que nous préparons les meilleures offres</p>
+              <div className="mt-6 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+                <div className="h-full bg-[#A67B5B] animate-pulse-width"></div>
+              </div>
+            </div>
           </div>
         ) : filteredPromotions.length === 0 ? (
-          <p className="text-center text-gray-500 text-xl py-20">Aucune promotion disponible pour cette sélection.</p>
+          <div className="flex flex-col justify-center items-center py-16">
+            <div className="text-center max-w-md mx-auto p-8 bg-white rounded-lg shadow-md">
+              <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-gray-50 flex items-center justify-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              </div>
+              <h2 className="text-2xl font-light text-gray-800 mb-4">Aucune promotion disponible</h2>
+              <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-4 opacity-30"></div>
+              <p className="text-gray-600 mb-8 max-w-md">Aucune promotion ne correspond à votre sélection actuelle. Essayez de modifier vos filtres pour voir plus de résultats.</p>
+              <button
+                onClick={() => {
+                  setSelectedMarque('');
+                  setSelectedEvenement('');
+                  setActiveFilter('tous');
+                }}
+                className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-md font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300 mx-auto"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                <span>Réinitialiser les filtres</span>
+              </button>
+            </div>
+          </div>
         ) : (
           <>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -935,12 +1063,12 @@ function Promotions() {
                 const prixRemise = calculerPrixRemise(prixOriginal, parseFloat(promotion.valeur));
 
               return (
-                <div key={promotion.id} className="group">
-                  <div className="relative mb-4 overflow-hidden">
+                <div key={promotion.id} className="promo-card bg-white rounded-lg shadow-sm overflow-hidden">
+                  <div className="relative overflow-hidden image-container">
                     {/* Show loading indicator while fetching images */}
                     {imagesLoading && !productImages[produitExemple?.id] && (
                       <div className="absolute inset-0 flex items-center justify-center bg-gray-100 bg-opacity-50 z-10">
-                        <LoadingSpinner size="sm" variant="circle" />
+                        <LoadingSpinner size="sm" variant="circle" color="#A67B5B" />
                       </div>
                     )}
 
@@ -951,7 +1079,7 @@ function Promotions() {
                           (produitExemple?.image_produit || PLACEHOLDER_IMAGE)
                       }
                       alt={produitExemple?.nom_produit || promotion.nom}
-                      className="w-full aspect-square object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="w-full aspect-square object-cover"
                       onError={(e) => {
                         // Prevent infinite loop by checking if we're already using the fallback
                         if (e.target.src.includes('data:image/svg+xml;base64')) {
@@ -967,14 +1095,14 @@ function Promotions() {
                       }}
                     />
                     {/* Bouton d'ajout aux favoris */}
-                    <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white flex items-center justify-center transition-colors hover:bg-gray-100">
-                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-700">
+                    <button className="absolute top-3 right-3 w-8 h-8 rounded-full bg-white flex items-center justify-center transition-colors hover:bg-gray-100 shadow-sm z-10">
+                      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" className="text-gray-700 hover:text-[#A67B5B]">
                         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
                       </svg>
                     </button>
 
-                    {/* Badge de réduction */}
-                    <div className="absolute top-0 left-0 bg-gray-100 text-red-500 text-xs px-2 py-1 font-medium">
+                    {/* Discount badge - Enhanced */}
+                    <div className="discount-badge">
                       {promotion.type === 'montant_fixe'
                         ? `-${parseFloat(promotion.valeur)} DT`
                         : promotion.type === 'gratuit'
@@ -982,10 +1110,10 @@ function Promotions() {
                           : `-${parseFloat(promotion.valeur)}%`}
                     </div>
 
-                    {/* Event badge if available */}
+                    {/* Event badge if available - Enhanced */}
                     {promotion.event && (
                       <div
-                        className="absolute top-0 right-0 text-xs px-2 py-1 font-medium text-white"
+                        className="event-badge"
                         style={{ backgroundColor: promotion.event.couleur || '#000000' }}
                       >
                         {promotion.event.nom}
@@ -993,39 +1121,44 @@ function Promotions() {
                     )}
                   </div>
 
-                  <h3 className="text-gray-800 text-base mb-1 font-light">
-                    {produitExemple?.nom_produit || promotion.nom}
-                  </h3>
+                  <div className="p-4">
+                    <h3 className="text-gray-800 text-base mb-1 font-light hover:text-[#A67B5B] transition-colors">
+                      {produitExemple?.nom_produit || promotion.nom}
+                    </h3>
 
-                  {/* Promotion description if available */}
-                  {promotion.description && (
-                    <p className="text-gray-500 text-xs mb-2 line-clamp-2">{promotion.description}</p>
-                  )}
+                    {/* Promotion description if available */}
+                    {promotion.description && (
+                      <p className="text-gray-500 text-xs mb-2 line-clamp-2">{promotion.description}</p>
+                    )}
 
-                  <div className="flex items-center gap-2 mb-3">
-                    <span className="text-base font-medium text-black">{prixRemise} DT</span>
-                    <span className="text-gray-500 text-sm line-through">{prixOriginal.toFixed(2)} DT</span>
-                  </div>
-
-                  {/* Promotion dates if available */}
-                  {promotion.date_debut && promotion.date_fin && (
-                    <div className="text-gray-500 text-xs mb-2">
-                      Valable du {new Date(promotion.date_debut).toLocaleDateString()} au {new Date(promotion.date_fin).toLocaleDateString()}
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="text-base font-medium text-[#A67B5B]">{prixRemise} DT</span>
+                      <span className="text-gray-500 text-sm line-through">{prixOriginal.toFixed(2)} DT</span>
+                      <span className="text-red-500 text-xs font-medium ml-auto">
+                        -{parseFloat(promotion.valeur)}%
+                      </span>
                     </div>
-                  )}
 
-                  <Link
-                    to={produitExemple ? `/article/${produitExemple.id}` : `/promotions/${promotion.id}`}
-                    className="inline-block text-gray-800 text-sm border border-gray-300 px-4 py-2 hover:bg-gray-100 transition-colors mt-1"
-                  >
-                    Voir détail
-                  </Link>
+                    {/* Promotion dates if available */}
+                    {promotion.date_debut && promotion.date_fin && (
+                      <div className="text-gray-500 text-xs mb-3 bg-gray-50 p-1.5 rounded">
+                        <span className="font-medium">Valable du</span> {new Date(promotion.date_debut).toLocaleDateString()} <span className="font-medium">au</span> {new Date(promotion.date_fin).toLocaleDateString()}
+                      </div>
+                    )}
+
+                    <Link
+                      to={produitExemple ? `/article/${produitExemple.id}` : `/promotions/${promotion.id}`}
+                      className="inline-block w-full text-center text-white text-sm bg-[#A67B5B] px-4 py-2 rounded hover:bg-[#8B5A2B] transition-colors"
+                    >
+                      Voir détail
+                    </Link>
+                  </div>
                 </div>
               );
               })}
             </div>
 
-            {/* Pagination controls */}
+            {/* Enhanced Pagination controls */}
             {pagination.lastPage > 1 && (
               <div className="flex justify-center mt-12">
                 <nav className="flex items-center space-x-2">
@@ -1033,13 +1166,13 @@ function Promotions() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                     disabled={currentPage === 1}
-                    className={`px-3 py-2 rounded-md ${
+                    className={`px-3 py-2 rounded-md transition-colors ${
                       currentPage === 1
                         ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        : 'text-[#A67B5B] hover:bg-[#A67B5B]/10'
                     }`}
+                    aria-label="Page précédente"
                   >
-                    <span className="sr-only">Previous</span>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
                     </svg>
@@ -1058,11 +1191,13 @@ function Promotions() {
                         <button
                           key={pageNumber}
                           onClick={() => setCurrentPage(pageNumber)}
-                          className={`px-3 py-1 rounded-md ${
+                          className={`w-10 h-10 flex items-center justify-center rounded-md transition-all ${
                             currentPage === pageNumber
-                              ? 'bg-gray-900 text-white'
-                              : 'text-gray-700 hover:bg-gray-100'
+                              ? 'bg-[#A67B5B] text-white font-medium shadow-sm'
+                              : 'text-gray-700 hover:bg-[#A67B5B]/10 hover:text-[#A67B5B]'
                           }`}
+                          aria-label={`Page ${pageNumber}`}
+                          aria-current={currentPage === pageNumber ? 'page' : undefined}
                         >
                           {pageNumber}
                         </button>
@@ -1072,7 +1207,7 @@ function Promotions() {
                       (pageNumber === currentPage + 2 && currentPage < pagination.lastPage - 2)
                     ) {
                       // Show ellipsis
-                      return <span key={pageNumber} className="px-2">...</span>;
+                      return <span key={pageNumber} className="w-10 h-10 flex items-center justify-center text-gray-500">&hellip;</span>;
                     }
                     return null;
                   })}
@@ -1081,18 +1216,25 @@ function Promotions() {
                   <button
                     onClick={() => setCurrentPage(prev => Math.min(prev + 1, pagination.lastPage))}
                     disabled={currentPage === pagination.lastPage}
-                    className={`px-3 py-2 rounded-md ${
+                    className={`px-3 py-2 rounded-md transition-colors ${
                       currentPage === pagination.lastPage
                         ? 'text-gray-400 cursor-not-allowed'
-                        : 'text-gray-700 hover:bg-gray-100'
+                        : 'text-[#A67B5B] hover:bg-[#A67B5B]/10'
                     }`}
+                    aria-label="Page suivante"
                   >
-                    <span className="sr-only">Next</span>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                       <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
                     </svg>
                   </button>
                 </nav>
+              </div>
+            )}
+
+            {/* Results count */}
+            {!isLoading && filteredPromotions.length > 0 && (
+              <div className="text-center text-gray-500 text-sm mt-6">
+                Affichage de {Math.min(pagination.perPage, filteredPromotions.length)} sur {pagination.total} promotions
               </div>
             )}
           </>

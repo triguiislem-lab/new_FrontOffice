@@ -10,6 +10,19 @@ import LoadingSpinner from "../Components/LoadingSpinner";
 import EnhancedLazyImage from "../Components/EnhancedLazyImage";
 import apiService from "../utils/apiService";
 
+// Custom CSS for animations
+const customStyles = `
+  @keyframes pulse-width {
+    0% { width: 15%; }
+    50% { width: 85%; }
+    100% { width: 15%; }
+  }
+
+  .animate-pulse-width {
+    animation: pulse-width 2s ease-in-out infinite;
+  }
+`;
+
 const ProductDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -176,6 +189,26 @@ const ProductDetailPage = () => {
     }
   }, [productImages, selectedImage]);
 
+  // Reset states when product ID changes
+  useEffect(() => {
+    // Reset all states when product ID changes to prevent showing old data
+    setLoading(true);
+    setArticle(null);
+    setMarque("");
+    setAttributs([]);
+    setAttributGroups({});
+    setVariantes([]);
+    setSelectedVariante(null);
+    setError(null);
+    setProductImages([]);
+    setSelectedImage(null);
+    setImageLoading(true);
+
+    // Scroll to top when changing products
+    window.scrollTo(0, 0);
+  }, [id]);
+
+  // Fetch product data
   useEffect(() => {
     if (!id) {
       setError("ID d'article invalide.");
@@ -183,52 +216,69 @@ const ProductDetailPage = () => {
       return;
     }
 
-    fetch(`https://laravel-api.fly.dev/api/produits/${id}`)
-      .then(res => res.json())
-      .then(data => {
-        setArticle(data);
-        return fetch(`https://laravel-api.fly.dev/api/marques/${data.marque_id}`)
-          .then(res => res.json())
-          .then(marqueData => setMarque(marqueData.nom_marque))
-          .catch(() => setMarque("Marque inconnue"));
-      })
-      .catch(() => setError("Erreur lors du chargement des détails du produit."))
-      .finally(() => setLoading(false));
+    const fetchProductData = async () => {
+      try {
+        const productResponse = await fetch(`https://laravel-api.fly.dev/api/produits/${id}`);
+        if (!productResponse.ok) {
+          throw new Error(`Erreur lors du chargement du produit: ${productResponse.status}`);
+        }
 
-    // Use apiService for optimized image loading with caching
-    apiService.getProductImages(id)
-      .then(data => {
-        if (data.images && data.images.length > 0) {
-          console.log("Images chargées:", data.images);
-          setProductImages(data.images);
-          const primaryImage = data.images.find(img => img.is_primary) || data.images[0];
-          console.log("Image principale sélectionnée:", primaryImage);
-          setSelectedImage(primaryImage);
+        const productData = await productResponse.json();
+        setArticle(productData);
 
-          // Mettre à jour les informations de débogage
+        // Fetch brand data
+        try {
+          const brandResponse = await fetch(`https://laravel-api.fly.dev/api/marques/${productData.marque_id}`);
+          if (brandResponse.ok) {
+            const brandData = await brandResponse.json();
+            setMarque(brandData.nom_marque);
+          } else {
+            setMarque("Marque inconnue");
+          }
+        } catch (brandError) {
+          console.error("Erreur lors du chargement de la marque:", brandError);
+          setMarque("Marque inconnue");
+        }
+
+        // Use apiService for optimized image loading with caching
+        try {
+          const imageData = await apiService.getProductImages(id);
+          if (imageData.images && imageData.images.length > 0) {
+            setProductImages(imageData.images);
+            const primaryImage = imageData.images.find(img => img.is_primary) || imageData.images[0];
+            setSelectedImage(primaryImage);
+
+            setDebugInfo(prev => ({
+              ...prev,
+              hasImages: true,
+              selectedImageUrl: primaryImage?.direct_url || null
+            }));
+
+            setImageLoading(false);
+          } else {
+            console.warn("Aucune image trouvée pour ce produit");
+            setDebugInfo(prev => ({
+              ...prev,
+              hasImages: false
+            }));
+          }
+        } catch (imageError) {
+          console.error("Erreur lors du chargement des images du produit:", imageError);
           setDebugInfo(prev => ({
             ...prev,
-            hasImages: true,
-            selectedImageUrl: primaryImage?.direct_url || null
-          }));
-
-          // No need to force image reload with a timeout
-          setImageLoading(false);
-        } else {
-          console.warn("Aucune image trouvée pour ce produit");
-          setDebugInfo(prev => ({
-            ...prev,
-            hasImages: false
+            error: imageError.message
           }));
         }
-      })
-      .catch((error) => {
-        console.error("Erreur lors du chargement des images du produit:", error);
-        setDebugInfo(prev => ({
-          ...prev,
-          error: error.message
-        }));
-      });
+      } catch (error) {
+        console.error("Erreur lors du chargement des détails du produit:", error);
+        setError("Erreur lors du chargement des détails du produit.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductData();
+  }, [id]);
 
     fetch(`https://laravel-api.fly.dev/api/produits/${id}/attributs`)
       .then(res => res.json())
@@ -637,26 +687,49 @@ const ProductDetailPage = () => {
     </div>
   );
 
+  // Loading state with elegant animation
+  if (loading) return (
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center" key={`product-loading-${id}`}>
+      <div className="text-center max-w-md mx-auto px-4 py-12 bg-white rounded-lg shadow-md">
+        <LoadingSpinner size="lg" variant="elegant" color="#A67B5B" />
+        <p className="mt-6 text-gray-600 font-light tracking-wide">Chargement des détails du produit...</p>
+        <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-6 opacity-30"></div>
+        <p className="text-sm text-gray-500 font-light">Veuillez patienter pendant que nous préparons les informations</p>
+        <div className="mt-6 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+          <div className="h-full bg-[#A67B5B] animate-pulse-width"></div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Error state
   if (!article) return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center" key={`product-error-${id}`}>
       <div className="text-center max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
-        <svg className="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9.172 16.172a4 4 0 015.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-        </svg>
-        <h2 className="text-xl font-bold text-gray-800 mb-2">Article introuvable</h2>
-        <p className="text-gray-600">Le produit que vous recherchez n'existe pas ou a été supprimé.</p>
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
+        <h2 className="text-2xl font-light text-gray-800 mb-4">Article introuvable</h2>
+        <p className="text-gray-600 mb-4">Le produit que vous recherchez n'existe pas ou a été supprimé.</p>
+        <p className="text-sm text-gray-500 mb-8">ID du produit: {id}</p>
         <button
-          className="mt-4 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
+          className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300"
           onClick={() => navigate(-1)}
         >
-          Retour
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+          </svg>
+          <span>Retour</span>
         </button>
       </div>
     </div>
   );
 
   return (
-    <div className="min-h-screen bg-gray-50 text-gray-800 font-serif">
+    <div className="min-h-screen bg-gray-50 text-gray-800 font-serif" key={`product-detail-${id}`}>
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       <div className="container mx-auto px-4 py-8">
         <button
           className="mb-6 px-6 py-2 bg-gray-100 text-gray-700  hover:bg-gray-200 transition-all duration-300 shadow-sm hover:shadow-md"

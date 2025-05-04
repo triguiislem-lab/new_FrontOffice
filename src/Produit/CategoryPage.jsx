@@ -3,6 +3,19 @@ import { useParams, Link } from "react-router-dom";
 import "../style/animations.css";
 import LoadingSpinner from "../Components/LoadingSpinner";
 
+// Custom CSS for animations
+const customStyles = `
+  @keyframes pulse-width {
+    0% { width: 15%; }
+    50% { width: 85%; }
+    100% { width: 15%; }
+  }
+
+  .animate-pulse-width {
+    animation: pulse-width 2s ease-in-out infinite;
+  }
+`;
+
 const CategoryPage = () => {
   const { id } = useParams();
   const [category, setCategory] = useState(null);
@@ -101,22 +114,38 @@ const CategoryPage = () => {
       });
   }, [id]);
 
+  // Loading state with elegant animation
   if (loading) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <LoadingSpinner size="lg" variant="circle" />
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center" key={`category-loading-${id}`}>
+      <div className="text-center max-w-md mx-auto px-4 py-12 bg-white rounded-lg shadow-md">
+        <LoadingSpinner size="lg" variant="elegant" color="#A67B5B" />
+        <p className="mt-6 text-gray-600 font-light tracking-wide">Chargement de la catégorie...</p>
+        <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-6 opacity-30"></div>
+        <p className="text-sm text-gray-500 font-light">Veuillez patienter pendant que nous préparons votre expérience</p>
+        <div className="mt-6 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+          <div className="h-full bg-[#A67B5B] animate-pulse-width"></div>
+        </div>
       </div>
     </div>
   );
 
+  // Error state with improved styling
   if (error) return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center p-8 bg-white rounded-xl shadow-lg max-w-md">
-        <div className="text-red-500 text-5xl mb-4">!</div>
+    <div className="min-h-screen bg-gray-50 flex items-center justify-center" key={`category-error-${id}`}>
+      <div className="text-center max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+        <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+        </div>
         <h2 className="text-2xl font-light text-gray-800 mb-4">Une erreur est survenue</h2>
-        <p className="text-gray-600 mb-6">{error}</p>
-        <Link to="/" className="inline-block px-6 py-3 bg-[#A67B5B] text-white rounded-md hover:bg-[#8B5A2B] transition-colors">
-          Retour à l'accueil
+        <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-4 opacity-30"></div>
+        <p className="text-gray-600 mb-8 max-w-md">{error}</p>
+        <Link to="/" className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300 mx-auto w-max">
+          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6" />
+          </svg>
+          <span>Retour à l'accueil</span>
         </Link>
       </div>
     </div>
@@ -131,7 +160,8 @@ const CategoryPage = () => {
   const isItemVisible = (id) => visibleItems.includes(id.toString());
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-800 font-serif">
+    <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 text-gray-800 font-serif" key={`category-page-${id}`}>
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       {/* ✅ En-tête avec image de la catégorie et effet parallaxe */}
       {category && category.image_categorie && (
         <div

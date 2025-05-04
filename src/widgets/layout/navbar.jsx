@@ -119,7 +119,7 @@ function Navbar() {
             }`}
           >
             Accueil
-            {isActive('/') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block transform transition-transform duration-300 origin-center"></span>}
+            {isActive('/') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block"></span>}
           </Link>
           <button
             className={`nav-item transition-all duration-300 py-2 px-3 block lg:inline-block border-b border-gray-100 lg:border-0 font-medium text-sm uppercase tracking-wide w-full lg:w-auto text-left relative ${
@@ -128,7 +128,7 @@ function Navbar() {
             onClick={() => toggleSidebar("marques")}
           >
             Marques
-            {(isActive('/brand') || isActive('/marques')) && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block transform transition-transform duration-300 origin-center"></span>}
+            {(isActive('/brand') || isActive('/marques')) && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block"></span>}
           </button>
           <Link
             to="/products"
@@ -137,7 +137,7 @@ function Navbar() {
             }`}
           >
             Produits
-            {(isActive('/products') || isActive('/article')) && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block transform transition-transform duration-300 origin-center"></span>}
+            {(isActive('/products') || isActive('/article')) && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block"></span>}
           </Link>
           <Link
             to="/promotions"
@@ -146,7 +146,7 @@ function Navbar() {
             }`}
           >
             Promotions
-            {isActive('/promotions') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block transform transition-transform duration-300 origin-center"></span>}
+            {isActive('/promotions') && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block"></span>}
           </Link>
           <Link
             to="/inspirations"
@@ -155,7 +155,7 @@ function Navbar() {
             }`}
           >
             Inspirations
-            {(isActive('/inspirations') || isActive('/inspiration')) && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block transform transition-transform duration-300 origin-center"></span>}
+            {(isActive('/inspirations') || isActive('/inspiration')) && <span className="absolute bottom-0 left-0 w-full h-0.5 bg-[#A67B5B] hidden lg:block"></span>}
           </Link>
           <button
             onClick={toggleContactPopup}

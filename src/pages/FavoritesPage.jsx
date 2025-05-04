@@ -6,6 +6,19 @@ import { useCart } from "@/Contexts/CartContext";
 import { useAuth } from "@/Contexts/AuthContext";
 import LoadingSpinner from "../Components/LoadingSpinner";
 
+// Custom CSS for animations
+const customStyles = `
+  @keyframes pulse-width {
+    0% { width: 15%; }
+    50% { width: 85%; }
+    100% { width: 15%; }
+  }
+
+  .animate-pulse-width {
+    animation: pulse-width 2s ease-in-out infinite;
+  }
+`;
+
 const FavoritesPage = () => {
   const { wishlist, loading, error, removeFromWishlist, moveToCart } = useWishlist();
   const { isAuthenticated } = useAuth();
@@ -71,10 +84,15 @@ const FavoritesPage = () => {
     return (
       <div className="bg-[#FAFAFA] min-h-screen">
         <div className="max-w-7xl mx-auto px-6 py-24 text-center">
-          <div className="mx-auto mb-6">
-            <LoadingSpinner size="lg" variant="circle" />
+          <div className="text-center max-w-md mx-auto px-4 py-12 bg-white rounded-lg shadow-md">
+            <LoadingSpinner size="lg" variant="elegant" color="#A67B5B" />
+            <p className="mt-6 text-gray-600 font-light tracking-wide">Chargement de votre liste d'envies...</p>
+            <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-6 opacity-30"></div>
+            <p className="text-sm text-gray-500 font-light">Veuillez patienter pendant que nous préparons vos articles favoris</p>
+            <div className="mt-6 w-full bg-gray-100 h-2 rounded-full overflow-hidden">
+              <div className="h-full bg-[#A67B5B] animate-pulse-width"></div>
+            </div>
           </div>
-          <p className="text-gray-500 font-light tracking-wide">Chargement de votre liste d'envies...</p>
         </div>
       </div>
     );
@@ -84,20 +102,33 @@ const FavoritesPage = () => {
     return (
       <div className="bg-[#FAFAFA] min-h-screen">
         <div className="max-w-7xl mx-auto px-6 py-24 text-center">
-          <div className="w-16 h-16 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
-            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
-            </svg>
+          <div className="text-center max-w-md mx-auto p-6 bg-white rounded-lg shadow-md">
+            <div className="w-20 h-20 mx-auto mb-6 rounded-full bg-red-50 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+              </svg>
+            </div>
+            <h2 className="text-2xl font-light text-gray-800 mb-4">Une erreur est survenue</h2>
+            <div className="w-16 h-[0.5px] bg-[#A67B5B] mx-auto my-4 opacity-30"></div>
+            <p className="text-gray-600 mb-8 max-w-md">{error}</p>
+            <button
+              onClick={() => window.location.reload()}
+              className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300 mx-auto"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              <span>Réessayer</span>
+            </button>
           </div>
-          <p className="text-gray-800 font-light tracking-wide mb-2">Une erreur est survenue lors du chargement de votre liste d'envies.</p>
-          <p className="text-sm text-gray-500 font-light">{error}</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAFA] text-gray-800 font-serif">
+    <div className="min-h-screen bg-[#FAFAFA] text-gray-800 font-serif" key="favorites-page">
+      <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       {/* Hero Section */}
       <div className="relative py-20 bg-[#F5F2EE]">
         <div className="absolute inset-0 overflow-hidden opacity-10">

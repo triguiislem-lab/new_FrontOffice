@@ -479,6 +479,17 @@
   animation: elegantSpin 1.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
 }
 
+/* Standardized loading line animation */
+@keyframes pulse-width {
+  0% { width: 15%; }
+  50% { width: 85%; }
+  100% { width: 15%; }
+}
+
+.animate-pulse-width {
+  animation: pulse-width 2s ease-in-out infinite;
+}
+
 /* Smooth reveal animation for sections */
 @keyframes revealUp {
   0% {
