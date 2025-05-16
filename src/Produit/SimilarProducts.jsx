@@ -110,7 +110,6 @@ const SimilarProducts = ({ productId, categorieId, marqueId, description, isInSt
           throw new Error("Erreur lors de la récupération des marques");
         }
         const marquesData = await response.json();
-        console.log("Données des marques :", marquesData);
 
         // Créer une map marque_id -> nom_marque
         const marquesMapTemp = {};
@@ -119,7 +118,6 @@ const SimilarProducts = ({ productId, categorieId, marqueId, description, isInSt
         });
         setMarquesMap(marquesMapTemp);
       } catch (error) {
-        console.error("Erreur lors de la récupération des marques :", error);
         setError(error.message);
       }
     };
@@ -183,12 +181,10 @@ const SimilarProducts = ({ productId, categorieId, marqueId, description, isInSt
           }));
           setSimilarProducts(productsWithImages);
         } catch (error) {
-          console.error("Erreur lors du chargement des images:", error);
           // Fallback to products without images
           setSimilarProducts(filteredProducts);
         }
       } catch (error) {
-        console.error("Erreur lors du chargement des produits similaires :", error);
         setError(error.message);
       } finally {
         setLoading(false);

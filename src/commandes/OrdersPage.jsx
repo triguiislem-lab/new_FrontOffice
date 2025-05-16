@@ -21,8 +21,6 @@ const OrdersPage = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null);
   const [deleteLoading, setDeleteLoading] = useState(false);
 
-  // State for debug mode
-  const [debugMode, setDebugMode] = useState(false);
 
   // State for detailed orders
   const [detailedOrders, setDetailedOrders] = useState([]);
@@ -491,98 +489,7 @@ const OrdersPage = () => {
             Consultez et gérez toutes vos commandes. Vous pouvez filtrer les résultats par date ou par client.
           </p>
 
-          {/* Debug button - only visible in development */}
-          {process.env.NODE_ENV !== 'production' && (
-            <button
-              onClick={() => setDebugMode(!debugMode)}
-              className="mt-4 text-xs bg-gray-200 hover:bg-gray-300 text-gray-700 px-3 py-1 rounded-full transition-colors"
-            >
-              {debugMode ? 'Masquer le débogage' : 'Afficher le débogage'}
-            </button>
-          )}
 
-          {/* Debug information panel */}
-          {debugMode && (
-            <div className="mt-4 p-4 bg-gray-100 rounded-lg text-left max-w-3xl mx-auto">
-              <h3 className="text-sm font-semibold text-gray-700 mb-2">Informations de débogage</h3>
-              <div className="text-xs font-mono bg-white p-3 rounded border border-gray-300 overflow-auto max-h-60">
-                <p><strong>User:</strong> {isAuthenticated ? `ID: ${user?.id}, Admin: ${user?.isAdmin ? 'Oui' : 'Non'}` : 'Non authentifié'}</p>
-                <p><strong>Filters:</strong> {JSON.stringify(filters, null, 2)}</p>
-                <p><strong>Basic orders count:</strong> {orders.length}</p>
-                <p><strong>Detailed orders count:</strong> {detailedOrders.length}</p>
-                <p><strong>Loading details:</strong> {loadingDetails ? 'Yes' : 'No'}</p>
-                <p><strong>API URL:</strong> {process.env.REACT_APP_API_URL || 'Not defined'}/commandes</p>
-                <p><strong>Auth status:</strong> {isAuthenticated ? 'Authenticated' : 'Not authenticated'}</p>
-
-                {detailedOrders.length > 0 && (
-                  <div className="mt-2">
-                    <p><strong>First detailed order:</strong></p>
-                    <pre className="text-xs bg-gray-100 p-1 mt-1 rounded max-h-20 overflow-auto">
-                      {JSON.stringify(detailedOrders[0], null, 2).substring(0, 200)}...
-                    </pre>
-                  </div>
-                )}
-
-                <div className="mt-2">
-                  <p className="font-semibold">Actions de débogage:</p>
-                  <div className="flex flex-wrap gap-2 mt-1">
-                    <button
-                      onClick={async () => {
-                        try {
-                          const response = await fetch(`${process.env.REACT_APP_API_URL || 'https://laravel-api.fly.dev/api'}/commandes`, {
-                            headers: {
-                              'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                              'Content-Type': 'application/json',
-                              'Accept': 'application/json'
-                            }
-                          });
-                          const data = await response.json();
-                          alert(`Direct fetch result: ${response.status} ${response.statusText}\nFound ${Array.isArray(data) ? data.length : 'unknown'} orders`);
-                        } catch (err) {
-                          alert(`Direct fetch error: ${err.message}`);
-                        }
-                      }}
-                      className="bg-blue-100 hover:bg-blue-200 text-blue-800 px-2 py-1 rounded text-xs"
-                    >
-                      Test Direct Fetch
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        localStorage.removeItem('token');
-                        alert('Token removed from localStorage');
-                      }}
-                      className="bg-red-100 hover:bg-red-200 text-red-800 px-2 py-1 rounded text-xs"
-                    >
-                      Clear Token
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        alert(`Current orders in state: ${orders.length}`);
-                      }}
-                      className="bg-green-100 hover:bg-green-200 text-green-800 px-2 py-1 rounded text-xs"
-                    >
-                      Show Orders Count
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        if (orders.length === 0) {
-                          alert('No orders to refresh details for');
-                          return;
-                        }
-                        fetchOrderDetails(orders);
-                      }}
-                      className="bg-purple-100 hover:bg-purple-200 text-purple-800 px-2 py-1 rounded text-xs"
-                    >
-                      Refresh Order Details
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
 
         {/* Filters */}

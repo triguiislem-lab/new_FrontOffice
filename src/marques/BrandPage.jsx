@@ -92,7 +92,6 @@ const BrandPage = () => {
                 image_produit: imageUrl || '/img/placeholder-product.jpg'
               };
             } catch (imgErr) {
-              console.error(`Error fetching image for product ${product.id}:`, imgErr);
               return {
                 ...product,
                 image_produit: '/img/placeholder-product.jpg'
@@ -105,7 +104,6 @@ const BrandPage = () => {
         setFilteredProducts(productsWithImages);
         setLoading(false);
       } catch (error) {
-        console.error('Erreur lors du chargement :', error);
         setLoading(false);
       }
     };
@@ -120,7 +118,7 @@ const BrandPage = () => {
         const categoriesRes = await axios.get('https://laravel-api.fly.dev/api/categories');
         setCategories(categoriesRes.data);
       } catch (error) {
-        console.error('Erreur lors de la récupération des catégories :', error);
+        // Handle error silently
       }
     };
 

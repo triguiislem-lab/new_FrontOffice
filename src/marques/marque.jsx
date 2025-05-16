@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Eye, Award, Globe, ArrowRight, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import DynamicButton from "../Components/DynamicButton";

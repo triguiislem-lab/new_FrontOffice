@@ -272,13 +272,7 @@ const FixedOrderDetailPage = () => {
   // Get status info
   const statusInfo = getStatusInfo(order.status || order.statut || 'en_attente');
 
-  // Debug component only for development environment
-  const DebugOrderData = ({ order }) => {
-    if (!order || process.env.NODE_ENV === 'production') return null;
 
-    // Only render in development mode
-    return null;
-  };
 
   return (
     <div className="min-h-screen bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">

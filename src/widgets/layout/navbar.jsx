@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import axios from "axios";
 import { useAuth } from '../../Contexts/AuthContext.jsx';
@@ -44,7 +44,7 @@ function ErrorBoundary({ children }) {
   try {
     return children;
   } catch (error) {
-    console.error("Error in Navbar:", error);
+
     setHasError(true);
     setError(error);
     return null;
@@ -97,7 +97,7 @@ function Navbar() {
         setBrands(response.data);
         setApiError(false);
       } catch (error) {
-        console.error("Erreur de chargement des marques :", error);
+
         setApiError(true);
         // Set empty brands array to prevent UI errors
         setBrands([]);
@@ -112,7 +112,7 @@ function Navbar() {
     try {
       keycloak.login({ redirectUri: window.location.origin + '/home' });
     } catch (error) {
-      console.error('Error during login:', error);
+
       alert('Problème de connexion. Veuillez réessayer plus tard.');
     }
   };
@@ -121,7 +121,7 @@ function Navbar() {
     try {
       keycloak.register({ redirectUri: window.location.origin + '/home' });
     } catch (error) {
-      console.error('Error during registration:', error);
+
       alert('Problème d\'inscription. Veuillez réessayer plus tard.');
     }
   };
@@ -130,7 +130,7 @@ function Navbar() {
     try {
       keycloak.logout({ redirectUri: window.location.origin + '/home' });
     } catch (error) {
-      console.error('Error during logout:', error);
+
       alert('Problème de déconnexion. Veuillez réessayer plus tard.');
     }
   };
@@ -175,10 +175,7 @@ function Navbar() {
             alt="Jihen-line Logo"
             className="h-14 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
             onError={(e) => {
-              // Only log in development
-              if (process.env.NODE_ENV !== 'production') {
-                console.log("Logo image failed to load, using fallback");
-              }
+
               e.target.onerror = null;
               e.target.src = "/img/placeholder-logo.svg";
             }}

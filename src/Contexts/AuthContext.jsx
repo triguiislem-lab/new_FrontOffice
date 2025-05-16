@@ -1,4 +1,4 @@
-import { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 import AuthService from '../Services/auth.service.js';
 import { keycloak, initKeycloak } from '../Services/keycloakInstance.js';
 

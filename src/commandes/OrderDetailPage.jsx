@@ -282,10 +282,7 @@ const OrderDetailPage = () => {
       }
     } catch (err) {
       setError('Erreur lors de la suppression de la commande. Veuillez réessayer.');
-      // Log error only in development
-      if (process.env.NODE_ENV !== 'production') {
-        console.error('Error deleting order:', err);
-      }
+
     } finally {
       setDeleteLoading(false);
       setDeleteConfirm(false);
