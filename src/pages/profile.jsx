@@ -20,7 +20,7 @@ import {
   CameraIcon,
   EyeIcon
 } from "@heroicons/react/24/solid";
-import { useAuth } from "@/Contexts/AuthContext";
+import { useAuth } from "../Contexts/AuthContext";
 import axios from "axios";
 import LoadingSpinner from "../Components/LoadingSpinner";
 import EnhancedLazyImage from "../Components/EnhancedLazyImage";

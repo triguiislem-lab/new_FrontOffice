@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/Contexts/AuthContext';
-import orderService from '@/Services/order.service';
-import LoadingSpinner from '@/Components/LoadingSpinner';
-import DynamicButton from '@/Components/DynamicButton';
+import { useAuth } from '../Contexts/AuthContext';
+import orderService from '../Services/order.service';
+import LoadingSpinner from '../Components/LoadingSpinner';
+import DynamicButton from '../Components/DynamicButton';
 
 const OrdersPage = () => {
   const { isAuthenticated, user } = useAuth();

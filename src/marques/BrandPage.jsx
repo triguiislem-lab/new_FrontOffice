@@ -2,8 +2,8 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import LoadingSpinner from "../Components/LoadingSpinner";
-import { useWishlist } from "@/Contexts/WishlistContext";
-import { useCart } from "@/Contexts/CartContext";
+import { useWishlist } from "../Contexts/WishlistContext";
+import { useCart } from "../Contexts/CartContext";
 
 // Custom CSS for the brand page
 const brandPageStyles = `

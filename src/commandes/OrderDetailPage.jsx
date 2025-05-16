@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/Contexts/AuthContext';
-import orderService from '@/Services/order.service';
-import LoadingSpinner from '@/Components/LoadingSpinner';
-import DynamicButton from '@/Components/DynamicButton';
-import BackButton from '@/Components/BackButton';
+import { useAuth } from '../Contexts/AuthContext';
+import orderService from '../Services/order.service';
+import LoadingSpinner from '../Components/LoadingSpinner';
+import DynamicButton from '../Components/DynamicButton';
+import BackButton from '../Components/BackButton';
 
 const OrderDetailPage = () => {
   const { id } = useParams();

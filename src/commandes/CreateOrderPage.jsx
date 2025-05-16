@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/Contexts/AuthContext';
-import { useCart } from '@/Contexts/CartContext';
-import orderService from '@/Services/order.service';
-import authService from '@/Services/auth.service';
-import { keycloak } from '@/Services/keycloakInstance';
-import LoadingSpinner from '@/Components/LoadingSpinner';
-import DynamicButton from '@/Components/DynamicButton';
+import { useAuth } from '../Contexts/AuthContext';
+import { useCart } from '../Contexts/CartContext';
+import orderService from '../Services/order.service';
+import authService from '../Services/auth.service';
+import { keycloak } from '../Services/keycloakInstance';
+import LoadingSpinner from '../Components/LoadingSpinner';
+import DynamicButton from '../Components/DynamicButton';
 
 const CreateOrderPage = () => {
   const navigate = useNavigate();

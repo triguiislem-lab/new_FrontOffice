@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import DynamicButton from "@/Components/DynamicButton";
+import DynamicButton from "../Components/DynamicButton";
 
 const SousSousCategoriesPage = () => {
   const { id } = useParams(); // ✅ Récupère l'ID de la sous-catégorie depuis l'URL

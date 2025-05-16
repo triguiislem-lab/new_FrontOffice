@@ -1,6 +1,6 @@
 import React from "react";
 import { Typography, Input, Textarea, Select, Option } from "@material-tailwind/react";
-import DynamicSubmitButton from "@/components/DynamicSubmitButton";
+import DynamicSubmitButton from "../components/DynamicSubmitButton";
 
 export function DevenirAffilie() {
   return (

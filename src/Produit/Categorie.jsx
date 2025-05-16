@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useEffect, useRef, useState } from 'react';
-import LazyImage from '../components/LazyImage';
+import LazyImage from '../Components/LazyImage';
 
 const Categorie = ({ id, name, image, des }) => {
   const [isVisible, setIsVisible] = useState(false);

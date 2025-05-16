@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Mail, Building, Phone, UserCheck, Percent, Clock, Award, Globe, User } from 'lucide-react';
-import DynamicButton from '@/Components/DynamicButton';
-import DynamicSubmitButton from '@/components/DynamicSubmitButton';
+import DynamicButton from '../Components/DynamicButton';
+import DynamicSubmitButton from '../components/DynamicSubmitButton';
 
 export default function ProfessionalPage() {
   const [formData, setFormData] = useState({

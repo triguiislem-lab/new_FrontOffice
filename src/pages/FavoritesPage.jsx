@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import axios from "axios";
-import { useWishlist } from "@/Contexts/WishlistContext";
-import { useCart } from "@/Contexts/CartContext";
-import { useAuth } from "@/Contexts/AuthContext";
+import { useWishlist } from "../Contexts/WishlistContext";
+import { useCart } from "../Contexts/CartContext";
+import { useAuth } from "../Contexts/AuthContext";
 import LoadingSpinner from "../Components/LoadingSpinner";
 
 // Custom CSS for animations

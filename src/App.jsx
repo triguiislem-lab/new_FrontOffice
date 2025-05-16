@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate, useLocation } from "react-router-dom";
-import routes from "@/routes";
+import routes from "./routes";
 // Import bootstrap JS only when needed, not on initial load
 // import "bootstrap/dist/js/bootstrap.bundle.min.js";
 

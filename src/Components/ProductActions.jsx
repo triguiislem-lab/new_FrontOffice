@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useCart } from '@/Contexts/CartContext';
-import { useWishlist } from '@/Contexts/WishlistContext';
+import { useCart } from '../Contexts/CartContext';
+import { useWishlist } from '../Contexts/WishlistContext';
 import LoadingSpinner from './LoadingSpinner';
 
 /**
