@@ -3,6 +3,7 @@ import LoadingSpinner from './Components/LoadingSpinner';
 import PrivateRoute from './Components/PrivateRoute.jsx';
 import LoadingSpinnerDemo from './Components/LoadingSpinnerDemo';
 import LoadingUtilsDemo from './pages/LoadingUtilsDemo';
+// Import Profile component directly
 import ProfileComponent from './pages/Profile.jsx';
 import { lazyWithPreload, preloadMultipleDuringIdle } from './utils/lazyLoader.jsx';
 import { LOADING_MESSAGES } from './utils/loadingConfig';
