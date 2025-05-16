@@ -3,6 +3,7 @@ import LoadingSpinner from './Components/LoadingSpinner';
 import PrivateRoute from './Components/PrivateRoute.jsx';
 import LoadingSpinnerDemo from './Components/LoadingSpinnerDemo';
 import LoadingUtilsDemo from './pages/LoadingUtilsDemo';
+import ProfileComponent from './pages/Profile.jsx';
 import { lazyWithPreload, preloadMultipleDuringIdle } from './utils/lazyLoader.jsx';
 import { LOADING_MESSAGES } from './utils/loadingConfig';
 
@@ -18,10 +19,8 @@ const Home = lazyWithPreload(
   { fallbackMessage: LOADING_MESSAGES.page }
 );
 
-const Profile = lazyWithPreload(
-  () => import('./pages/Profile.jsx'),
-  { fallbackMessage: 'Chargement de votre profil...' }
-);
+// Use the directly imported Profile component
+const Profile = ProfileComponent;
 
 const CategoryPage = lazyWithPreload(
   () => import('./Produit/CategoryPage.jsx'),
