@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import "../style/style.css";
 import { useNavigate } from "react-router-dom";
 import Categorie from '../Produit/Categorie.jsx';
@@ -8,7 +8,8 @@ import EnhancedLazyImage from "../Components/EnhancedLazyImage";
 import OptimizedCarousel from "../Components/OptimizedCarousel";
 import apiService from "../utils/apiService";
 import LoadingSpinner from "../Components/LoadingSpinner";
-import DynamicButton from "./won";
+import DynamicButton from "../Components/DynamicButton";
+import { preloadImages } from "../utils/imageOptimizer";
 
 // Carousel settings for the OptimizedCarousel component
 const heroSettings = {
@@ -35,7 +36,7 @@ const heroSettings = {
 
 
 
-export function Home() {
+function Home() {
   const [categoriesEnVedette, setCategoriesEnVedette] = useState([]); // État pour les catégories en vedette
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { isFirstLogin, isAuthenticated } = useAuth();
@@ -61,16 +62,36 @@ export function Home() {
     }
   }, [isFirstLogin]);
 
-  // Utilisation de useEffect pour récupérer les catégories en vedette avec notre service API optimisé
-  useEffect(() => {
-    apiService.get('/categories/featured')
-      .then((data) => {
-        setCategoriesEnVedette(data); // Mettre à jour l'état avec les catégories en vedette
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la récupération des catégories en vedette", error);
+  // Récupération optimisée des catégories en vedette
+  const fetchCategories = useCallback(async () => {
+    try {
+      const data = await apiService.get('/categories/featured', {}, {
+        useCache: true,
+        cacheMaxAge: 60 * 60 * 1000, // Cache for 1 hour
+        timeout: 8000, // 8 second timeout
+        deduplicate: true // Avoid duplicate requests
       });
+
+      setCategoriesEnVedette(data);
+
+      // Preload category images for better performance
+      if (data && data.length > 0) {
+        const categoryImages = data
+          .filter(cat => cat.image_categorie)
+          .map(cat => cat.image_categorie);
+
+        // Preload with priority (first 2 images load immediately, rest during idle time)
+        preloadImages(categoryImages, 2);
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des catégories en vedette", error);
+    }
   }, []);
+
+  // Load categories on component mount
+  useEffect(() => {
+    fetchCategories();
+  }, [fetchCategories]);
 
   // Check for redirect path in sessionStorage after successful authentication
   useEffect(() => {
@@ -91,65 +112,65 @@ export function Home() {
 
 
 
-  // Optimized carousel loading with caching and preloading
-  useEffect(() => {
-    const fetchCarrousels = async () => {
-      try {
-        setIsCarouselLoading(true);
-        setCarouselError(null);
+  // Optimized carousel loading with enhanced caching and preloading
+  const fetchCarrousels = useCallback(async () => {
+    try {
+      setIsCarouselLoading(true);
+      setCarouselError(null);
 
-        // Use the cached API service with longer cache duration
-        const carrousels = await apiService.get('/carousels/actifs', {}, {
+      // Use the enhanced API service with longer cache duration
+      const carrousels = await apiService.get('/carousels/actifs', {}, {
+        useCache: true,
+        cacheMaxAge: 30 * 60 * 1000, // Cache for 30 minutes
+        timeout: 8000 // 8 second timeout
+      });
+
+      if (carrousels.length > 0) {
+        const firstCarrouselId = carrousels[0].id;
+
+        // Use the enhanced API service for slides
+        const slides = await apiService.get(`/carousels/${firstCarrouselId}/slides`, {}, {
           useCache: true,
-          cacheDuration: 60 * 10 // Cache for 10 minutes
+          cacheMaxAge: 30 * 60 * 1000, // Cache for 30 minutes
+          timeout: 8000 // 8 second timeout
         });
 
-        if (carrousels.length > 0) {
-          const firstCarrouselId = carrousels[0].id;
-          // Use the cached API service
-          const slides = await apiService.get(`/carousels/${firstCarrouselId}/slides`, {}, {
-            useCache: true,
-            cacheDuration: 60 * 10 // Cache for 10 minutes
-          });
+        // Preload images for faster rendering using our optimized utility
+        if (slides.length > 0) {
+          // Extract image URLs from slides
+          const imageUrls = slides
+            .filter(slide => slide.primary_image_url)
+            .map(slide => slide.primary_image_url);
 
-          // Preload images for faster rendering
-          if (slides.length > 0) {
-            // Preload first image immediately
-            if (slides[0].primary_image_url) {
-              const firstImg = new Image();
-              firstImg.src = slides[0].primary_image_url;
-            }
-
-            // Preload remaining images during idle time
-            if (window.requestIdleCallback && slides.length > 1) {
-              window.requestIdleCallback(() => {
-                slides.slice(1).forEach(slide => {
-                  if (slide.primary_image_url) {
-                    const img = new Image();
-                    img.src = slide.primary_image_url;
-                  }
-                });
-              });
-            }
-          }
-
-          setCarrouselSlides(slides);
-          console.log('Carousel slides loaded:', slides);
-        } else {
-          setCarrouselSlides([]);
-          console.log('No active carousels found');
+          // Preload images with priority (first image loads immediately, rest during idle time)
+          preloadImages(imageUrls, 1);
         }
-      } catch (error) {
-        console.error("Erreur lors du chargement des carrousels actifs et de leurs diapositives", error);
-        setCarouselError("Impossible de charger le carrousel. Veuillez réessayer plus tard.");
-        setCarrouselSlides([]);
-      } finally {
-        setIsCarouselLoading(false);
-      }
-    };
 
-    fetchCarrousels();
+        setCarrouselSlides(slides);
+      } else {
+        setCarrouselSlides([]);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement des carrousels:", error);
+      setCarouselError("Impossible de charger le carrousel. Veuillez réessayer plus tard.");
+      setCarrouselSlides([]);
+    } finally {
+      setIsCarouselLoading(false);
+    }
   }, []);
+
+  // Load carousel data on component mount
+  useEffect(() => {
+    fetchCarrousels();
+
+    // Prefetch categories data for better performance when user navigates
+    apiService.prefetch([
+      {
+        endpoint: '/categories/featured',
+        options: { cacheMaxAge: 60 * 60 * 1000 } // 1 hour cache
+      }
+    ]);
+  }, [fetchCarrousels]);
 
   return (
     <div className="min-h-screen bg-gray-50 text-gray-800 font-serif">
@@ -224,7 +245,6 @@ export function Home() {
                     transformStyle: 'preserve-3d',
                     transform: `translateZ(0) rotateX(0) rotateY(0)`,
                     transition: 'all 0.6s cubic-bezier(0.165, 0.84, 0.44, 1)',
-                    animationDelay: `${index * 0.1}s`,
                     opacity: 0,
                     animation: 'fadeInUp 0.8s forwards',
                     animationDelay: `${index * 0.15}s`
@@ -247,7 +267,7 @@ export function Home() {
               <DynamicButton
                 label="Explorer toutes les catégories"
                 to="/Produit/AllCat"
-                className="btn-transition px-8 py-4 bg-[#A67B5B] text-white rounded-lg font-medium shadow-md hover:shadow-xl relative overflow-hidden group"
+                className="btn-primary px-8 py-4 rounded-lg font-medium shadow-md hover:shadow-xl"
               >
                 <span className="relative z-10 flex items-center">
                   <span>Explorer toutes les catégories</span>
@@ -285,9 +305,13 @@ export function Home() {
                     src="/img/interior-moodboard.png"
                     alt="Design d'intérieur - Style chaleureux"
                     className="w-full h-full object-cover"
-                    placeholder="/img/placeholder.jpg"
+                    fallbackSrc="/img/placeholder.jpg"
                     width={600}
                     height={450}
+                    optimize={true}
+                    blur={true}
+                    fadeIn={true}
+                    spinnerVariant="elegant"
                   />
                 </div>
               </div>
@@ -337,7 +361,7 @@ export function Home() {
                   <DynamicButton
                     label="Découvrir notre histoire"
                     to="/about"
-                    className="px-6 py-3 bg-[#A67B5B] text-white rounded-lg font-medium shadow-md hover:shadow-lg flex items-center"
+                    className="px-6 py-3 btn-primary rounded-lg font-medium shadow-md hover:shadow-lg flex items-center"
                   >
                     <span>Découvrir notre histoire</span>
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">

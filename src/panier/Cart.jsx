@@ -103,13 +103,19 @@ function Cart() {
   };
 
   // Merge guest cart with user cart
-  const mergeCart = async (guestCartId, guestId) => {
+  const mergeCart = async () => {
     try {
+      // Generate a UUID for guest_id
+      const guestId = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function(c) {
+        const r = Math.random() * 16 | 0;
+        const v = c === 'x' ? r : (r & 0x3 | 0x8);
+        return v.toString(16);
+      });
+
       const response = await axios.post(
         'https://laravel-api.fly.dev/api/cart/merge',
         {
-          guest_cart_id: guestCartId,
-          guest_id: guestId, // Include the guest_id
+          guest_id: guestId, // Use a UUID format as required by the updated API
           email: user?.email, // Optional, if required by the backend
         },
         {
@@ -379,14 +385,15 @@ function Cart() {
                   </svg>
                   <span>Vider le panier</span>
                 </button>
-                <button
+                <Link
+                  to="/commander"
                   className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300 ml-4"
                 >
                   <span>Passer la commande</span>
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 ml-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                   </svg>
-                </button>
+                </Link>
               </div>
             </div>
           </div>

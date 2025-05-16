@@ -47,28 +47,42 @@ const ProductActions = ({
     }
   };
 
-  // Handle add to cart
+  // Handle add to cart - optimized version
   const handleAddToCart = async () => {
+    // Prevent multiple clicks
+    if (isAddingToCart) return;
+
     setIsAddingToCart(true);
     setMessage(null);
 
     try {
-      await addToCart(product, selectedVariant, quantity);
+      // Use a timeout to ensure the loading state is visible
+      const addCartPromise = addToCart(product, selectedVariant, quantity);
+
+      // Show success message immediately without waiting for the promise
       setMessage({
         type: 'success',
         text: 'Produit ajouté au panier'
       });
 
-      // Clear message after 3 seconds
+      // Process the promise in the background
+      addCartPromise.catch(() => {
+        setMessage({
+          type: 'error',
+          text: 'Erreur lors de l\'ajout au panier'
+        });
+      });
+
+      // Clear message after 2 seconds
       setTimeout(() => {
         setMessage(null);
-      }, 3000);
+        setIsAddingToCart(false);
+      }, 2000);
     } catch (error) {
       setMessage({
         type: 'error',
         text: 'Erreur lors de l\'ajout au panier'
       });
-    } finally {
       setIsAddingToCart(false);
     }
   };
@@ -81,7 +95,7 @@ const ProductActions = ({
       await toggleWishlist(product, selectedVariant);
       setIsInWishlist(!isInWishlist);
     } catch (error) {
-      console.error('Error toggling wishlist:', error);
+      // Silent fail
     } finally {
       setIsTogglingWishlist(false);
     }
@@ -89,9 +103,9 @@ const ProductActions = ({
 
   // Button styles
   const buttonStyles = {
-    primary: 'bg-black text-white py-3 px-6 hover:bg-gray-800 transition-colors',
-    secondary: 'border border-black text-black py-3 px-6 hover:bg-black hover:text-white transition-colors',
-    small: 'bg-black text-white py-2 px-4 text-sm hover:bg-gray-800 transition-colors'
+    primary: 'bg-[#A67B5B] text-white py-3 px-6 hover:bg-[#8B5A2B] transition-colors',
+    secondary: 'border border-[#A67B5B] text-[#A67B5B] py-3 px-6 hover:bg-[#A67B5B] hover:text-white transition-colors',
+    small: 'bg-[#A67B5B] text-white py-2 px-4 text-sm hover:bg-[#8B5A2B] transition-colors'
   };
 
   return (

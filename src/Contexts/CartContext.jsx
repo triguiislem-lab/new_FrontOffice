@@ -60,27 +60,31 @@ export const CartProvider = ({ children }) => {
   // Create a ref to store previous auth state
   const prevAuthStateRef = useRef({ isAuthenticated, userId: user?.id });
 
-  // Helper function to trigger cart sync between tabs
+  // Helper function to trigger cart sync between tabs - optimized version
   const triggerCartSync = (cartData = null) => {
-    // Store sync info in localStorage to trigger storage event in other tabs
-    localStorage.setItem('cart_sync', JSON.stringify({
-      action: 'update',
-      timestamp: Date.now()
-    }));
-
-    // If cart data is provided, update the shared cart
+    // Only trigger sync if we have cart data
     if (cartData) {
-      if (isAuthenticated) {
-        // For authenticated users, use localStorage for persistence
-        localStorage.setItem('shared_cart', JSON.stringify(cartData));
-      } else {
-        // For unauthenticated users, use sessionStorage for temporary storage
-        sessionStorage.setItem('shared_cart', JSON.stringify(cartData));
+      // Use a debounced approach to reduce frequent updates
+      const now = Date.now();
+      // Only sync if it's been more than 2 seconds since last sync
+      if (now - lastSyncTime > 2000) {
+        // Store sync info in localStorage to trigger storage event in other tabs
+        localStorage.setItem('cart_sync', JSON.stringify({
+          action: 'update',
+          timestamp: now
+        }));
+
+        // Update shared cart storage
+        if (isAuthenticated) {
+          localStorage.setItem('shared_cart', JSON.stringify(cartData));
+        } else {
+          sessionStorage.setItem('shared_cart', JSON.stringify(cartData));
+        }
+
+        // Update our own last sync time
+        setLastSyncTime(now);
       }
     }
-
-    // Update our own last sync time
-    setLastSyncTime(Date.now());
   };
 
   // Force refresh cart from server
@@ -89,11 +93,9 @@ export const CartProvider = ({ children }) => {
       setLoading(true);
 
       if (isAuthenticated) {
-        console.log('Force refreshing cart from server');
         const response = await cartService.getCart();
 
         if (response.status === 'success') {
-          console.log('Refreshed cart data:', response.data);
           setCart(response.data);
 
           // Update shared cart for cross-browser sync
@@ -104,7 +106,6 @@ export const CartProvider = ({ children }) => {
 
       return false;
     } catch (err) {
-      console.error('Error refreshing cart:', err);
       setError('Failed to refresh cart data');
       return false;
     } finally {
@@ -120,31 +121,25 @@ export const CartProvider = ({ children }) => {
 
         // Only process if this is a newer sync than our last one
         if (syncData.timestamp > lastSyncTime) {
-          console.log('Syncing cart from another tab', syncData);
           setLastSyncTime(syncData.timestamp);
 
           // Refresh cart from server if we're authenticated
           if (isAuthenticated) {
-            console.log('Authenticated user detected, force refreshing cart from server');
-
             // Use our refreshCart function to ensure consistent behavior
             refreshCart().catch(err => {
-              console.error('Error refreshing cart during sync:', err);
-
               // Fallback to direct API call if refreshCart fails
               cartService.getCart().then(response => {
                 if (response.status === 'success' && response.data) {
                   setCart(response.data);
                 }
-              }).catch(syncErr => {
-                console.error('Error syncing cart between tabs:', syncErr);
+              }).catch(() => {
+                // Silent fail
               });
             });
           } else {
             // For unauthenticated users, check if there's a shared cart
             const sharedCart = JSON.parse(localStorage.getItem('shared_cart'));
             if (sharedCart) {
-              console.log('Using shared cart from localStorage for unauthenticated user');
               setCart(sharedCart);
             }
           }
@@ -163,14 +158,8 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     // Function to handle auth state changes
     const handleAuthStateChange = async () => {
-      console.log('Auth state changed:', {
-        prevState: prevAuthStateRef.current,
-        currentState: { isAuthenticated, userId: user?.id }
-      });
-
       // Case 1: User logged out
       if (prevAuthStateRef.current.isAuthenticated && !isAuthenticated) {
-        console.log('User logged out, handling cart transition');
 
         // Get the current cart before clearing
         const currentCart = { ...cart };
@@ -182,8 +171,6 @@ export const CartProvider = ({ children }) => {
 
         // Convert the authenticated cart to local format
         if (currentCart.items && currentCart.items.length > 0) {
-          console.log('Converting authenticated cart to local format');
-
           // Convert cart items to local format
           const localItems = currentCart.items.map(item => ({
             id: item.produit.id,
@@ -204,8 +191,6 @@ export const CartProvider = ({ children }) => {
 
           // Also update shared cart
           triggerCartSync(localCartObj);
-
-          console.log('Successfully converted authenticated cart to local format');
         } else {
           // Reset to empty cart first
           const emptyCart = { items: [], nombre_items: 0, sous_total: 0, total: 0 };
@@ -214,7 +199,6 @@ export const CartProvider = ({ children }) => {
           // Then check for guest cart data
           const localCart = JSON.parse(localStorage.getItem('cart')) || [];
           if (localCart.length > 0) {
-            console.log('Using local cart for logged out user');
             const localCartObj = createLocalCartObject(localCart);
             setCart(localCartObj);
           }
@@ -223,8 +207,6 @@ export const CartProvider = ({ children }) => {
 
       // Case 2: User logged in
       if (!prevAuthStateRef.current.isAuthenticated && isAuthenticated) {
-        console.log('User logged in, handling cart transition');
-
         // Check if we have local cart items to merge with server
         const localCart = JSON.parse(localStorage.getItem('cart')) || [];
         const hasLocalItems = localCart.length > 0;
@@ -235,29 +217,22 @@ export const CartProvider = ({ children }) => {
           const response = await cartService.getCart();
 
           if (response.status === 'success') {
-            console.log('Successfully loaded user cart after login');
-
             // Check if server cart is empty and we have local items
             if (response.data.items.length === 0 && hasLocalItems) {
-              console.log('Server cart is empty, merging local items');
 
               try {
-                // Create a guest cart ID for merging
-                // In a real implementation, you would have a guest cart ID from the server
-                // For now, we'll use a temporary ID based on the current timestamp
-                const guestCartId = Date.now();
+                // Create a guest ID for merging
+                // We'll use a UUID format as required by the updated API
+                // The mergeCart function will generate a UUID internally
 
-                // Merge local cart with server using the guest cart ID
-                const mergeResponse = await cartService.mergeCart(guestCartId);
+                // Merge local cart with server using a generated UUID
+                const mergeResponse = await cartService.mergeCart();
 
                 if (mergeResponse.status === 'success') {
-                  console.log('Successfully merged local cart with server');
-
                   // Get the updated cart from server
                   const refreshResponse = await cartService.getCart();
 
                   if (refreshResponse.status === 'success') {
-                    console.log('Using refreshed cart after merge');
                     setCart(refreshResponse.data);
 
                     // Clear local cart after successful merge
@@ -281,22 +256,19 @@ export const CartProvider = ({ children }) => {
 
               // If we have local items, try to merge them with server
               if (hasLocalItems && response.data.items.length > 0) {
-                console.log('Both server and local cart have items, merging');
 
                 try {
-                  // Create a guest cart ID for merging
-                  // In a real implementation, you would have a guest cart ID from the server
-                  // For now, we'll use a temporary ID based on the current timestamp
-                  const guestCartId = Date.now();
+                  // Create a guest ID for merging
+                  // We'll use a UUID format as required by the updated API
+                  // The mergeCart function will generate a UUID internally
 
-                  // Merge local cart with server using the guest cart ID
-                  await cartService.mergeCart(guestCartId);
+                  // Merge local cart with server using a generated UUID
+                  await cartService.mergeCart();
 
                   // Get the updated cart from server
                   const refreshResponse = await cartService.getCart();
 
                   if (refreshResponse.status === 'success') {
-                    console.log('Using refreshed cart after merge');
                     setCart(refreshResponse.data);
 
                     // Clear local cart after successful merge
@@ -316,17 +288,15 @@ export const CartProvider = ({ children }) => {
       // Case 3: User changed (switched accounts)
       if (prevAuthStateRef.current.isAuthenticated && isAuthenticated &&
           prevAuthStateRef.current.userId !== user?.id) {
-        console.log('User account changed, loading new user cart data');
 
         // Force refresh cart from server
         try {
           const response = await cartService.getCart();
           if (response.status === 'success') {
-            console.log('Successfully loaded new user cart');
             setCart(response.data);
           }
         } catch (error) {
-          console.error('Error loading new user cart:', error);
+          // Silent fail
         }
       }
 
@@ -348,7 +318,6 @@ export const CartProvider = ({ children }) => {
     const loadCart = async () => {
       // Skip if we've already loaded the cart
       if (hasLoadedCartRef.current) {
-        console.log('Cart already loaded, skipping duplicate load');
         return;
       }
 
@@ -365,11 +334,8 @@ export const CartProvider = ({ children }) => {
           : JSON.parse(sessionStorage.getItem(sharedCartKey)) || null;
 
         if (isAuthenticated) {
-          console.log('User authentication state:', { isAuthenticated, user });
-
           // If user is authenticated, try to get cart from API
           const response = await cartService.getCart();
-          console.log('Loading cart for authenticated user:', user?.id, response);
 
           // Check if the API cart is empty or has items
           const hasApiItems = response.status === 'success' &&
@@ -386,18 +352,15 @@ export const CartProvider = ({ children }) => {
           // Use Keycloak user ID if available, otherwise fall back to user.id
           const userId = keycloak?.tokenParsed?.sub || user?.id;
           const localCartKey = `cart_user_${userId}`;
-          console.log('Using local cart key:', localCartKey);
           const localCart = JSON.parse(localStorage.getItem(localCartKey)) || [];
           const hasLocalItems = localCart.length > 0;
 
           if (hasApiItems) {
             // API cart has items, use it as the primary source
-            console.log('Using API cart with items:', response.data.items.length);
             setCart(response.data);
 
             // If we also have local or shared items, try to merge them
             if (hasLocalItems || hasSharedItems) {
-              console.log('Found local or shared items to merge with API cart');
 
               // Combine local and shared items for merging
               const itemsToMerge = [
@@ -414,13 +377,12 @@ export const CartProvider = ({ children }) => {
 
               if (itemsToMerge.length > 0) {
                 try {
-                  // Create a guest cart ID for merging
-                  // In a real implementation, you would have a guest cart ID from the server
-                  // For now, we'll use a temporary ID based on the current timestamp
-                  const guestCartId = Date.now();
+                  // Create a guest ID for merging
+                  // We'll use a UUID format as required by the updated API
+                  // The mergeCart function will generate a UUID internally
 
-                  // Merge local cart with server using the guest cart ID
-                  await cartService.mergeCart(guestCartId);
+                  // Merge local cart with server using a generated UUID
+                  await cartService.mergeCart();
 
                   // Clear local storage after successful merge
                   localStorage.removeItem(localCartKey);
@@ -438,11 +400,8 @@ export const CartProvider = ({ children }) => {
             }
           } else {
             // API cart is empty, check for local or shared items
-            console.log('API cart is empty, checking for local or shared items');
-
             if (hasLocalItems || hasSharedItems) {
               // We have local or shared items, try to use them
-              console.log('Found local or shared items to use instead of empty API cart');
 
               // Combine local and shared items
               const combinedItems = [
@@ -459,14 +418,12 @@ export const CartProvider = ({ children }) => {
 
               // Try to merge with server
               try {
-                // Create a guest cart ID for merging
-                // In a real implementation, you would have a guest cart ID from the server
-                // For now, we'll use a temporary ID based on the current timestamp
-                const guestCartId = Date.now();
+                // Create a guest ID for merging
+                // We'll use a UUID format as required by the updated API
+                // The mergeCart function will generate a UUID internally
 
-                // Merge local cart with server using the guest cart ID
-                const mergeResponse = await cartService.mergeCart(guestCartId);
-                console.log('Merge response for empty API cart:', mergeResponse);
+                // Merge local cart with server using a generated UUID
+                const mergeResponse = await cartService.mergeCart();
 
                 // Clear localStorage after successful merge
                 localStorage.removeItem(localCartKey);
@@ -482,7 +439,6 @@ export const CartProvider = ({ children }) => {
                   setCart(refreshedResponse.data);
                 } else {
                   // Server still empty, use local representation
-                  console.log('Server cart still empty after merge, using local representation');
 
                   // Create a cart object from combined items
                   const localCartObj = createLocalCartObject(combinedItems);
@@ -492,7 +448,7 @@ export const CartProvider = ({ children }) => {
                   localStorage.setItem(sharedCartKey, JSON.stringify(localCartObj));
                 }
               } catch (mergeError) {
-                console.error('Error merging with empty API cart:', mergeError);
+                // Silent fail
 
                 // Create a cart object from combined items
                 const localCartObj = createLocalCartObject(combinedItems);
@@ -503,14 +459,12 @@ export const CartProvider = ({ children }) => {
               }
             } else {
               // No items anywhere, use empty API cart
-              console.log('No items found anywhere, using empty API cart');
               setCart(response.data || { items: [], nombre_items: 0, sous_total: 0, total: 0 });
             }
           }
         } else {
           // For unauthenticated users, check both regular cart and shared cart
           const localCart = JSON.parse(sessionStorage.getItem('cart')) || [];
-          console.log('Loading cart for unauthenticated user, local items:', localCart.length);
 
           // Check if we have a shared cart with items
           const hasSharedItems = sharedCart &&
@@ -518,11 +472,8 @@ export const CartProvider = ({ children }) => {
                                 sharedCart.items.length > 0;
 
           if (hasSharedItems) {
-            console.log('Found shared cart with items:', sharedCart.items.length);
-
             if (localCart.length > 0) {
               // We have both local and shared items, merge them
-              console.log('Merging local cart with shared cart');
 
               // Convert shared items to local format for merging
               const sharedItemsLocal = sharedCart.items.map(item => ({
@@ -559,7 +510,6 @@ export const CartProvider = ({ children }) => {
               const cartsAreIdentical = localCartHash === sharedCartHash;
 
               if (cartsAreIdentical) {
-                console.log('Shared items already in local cart, skipping merge');
 
                 // Create cart object from local cart only
                 const localCartObj = createLocalCartObject(localCart);
@@ -568,7 +518,6 @@ export const CartProvider = ({ children }) => {
                 // Save to shared cart for consistency
                 localStorage.setItem('shared_cart', JSON.stringify(localCartObj));
               } else {
-                console.log('Merging shared items with local cart');
 
                 // Check for duplicates and merge quantities
                 const mergedItems = [...localCart];
@@ -582,10 +531,8 @@ export const CartProvider = ({ children }) => {
                   if (existingIndex >= 0) {
                     // Item exists, don't add quantities to prevent duplication
                     // Just keep the existing quantity to avoid any increases
-                    console.log(`Item already exists in cart, keeping quantity: ${mergedItems[existingIndex].quantite}`);
                   } else {
                     // New item, add to array
-                    console.log(`Adding new item to merged cart: ${sharedItem.id}`);
                     mergedItems.push(sharedItem);
                   }
                 });
@@ -604,7 +551,6 @@ export const CartProvider = ({ children }) => {
             }
           } else if (localCart.length > 0) {
             // Only have local items, use them and create a shared cart
-            console.log('Using local cart items, creating shared cart');
             const localCartObj = createLocalCartObject(localCart);
             setCart(localCartObj);
 
@@ -612,19 +558,16 @@ export const CartProvider = ({ children }) => {
             localStorage.setItem('shared_cart', JSON.stringify(localCartObj));
           } else {
             // No items anywhere, use empty cart
-            console.log('No items found anywhere, using empty cart');
             setCart({ items: [], nombre_items: 0, sous_total: 0, total: 0 });
           }
         }
       } catch (err) {
-        console.error('Error loading cart:', err);
         setError('Failed to load cart data');
 
         // Fallback to localStorage in case of API error
         // Use Keycloak user ID if available, otherwise fall back to user.id
         const userId = keycloak?.tokenParsed?.sub || user?.id;
         const storageKey = isAuthenticated && userId ? `cart_user_${userId}` : 'cart';
-        console.log('Using fallback storage key:', storageKey);
         const localCart = JSON.parse(localStorage.getItem(storageKey)) || [];
         setCart({
           items: localCart.map(item => ({
@@ -662,7 +605,6 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated && user) {
       refreshInterval = setInterval(async () => {
         try {
-          console.log('Refreshing cart data...');
           const response = await cartService.getCart();
           if (response.status === 'success' && response.data) {
             setCart(response.data);
@@ -676,7 +618,7 @@ export const CartProvider = ({ children }) => {
             triggerCartSync(response.data);
           }
         } catch (err) {
-          console.error('Error refreshing cart:', err);
+          // Silent fail
         }
       }, 30000); // Refresh every 30 seconds
     }
@@ -693,15 +635,6 @@ export const CartProvider = ({ children }) => {
 
       if (isAuthenticated) {
         // Use API for authenticated users
-        console.log('Adding to cart with authenticated user:', {
-          productId: product.id,
-          variantId: variant?.id,
-          quantity,
-          replaceQuantity,
-          userId: keycloak?.tokenParsed?.sub
-        });
-
-        // First add the item
         const response = await cartService.addToCart(
           product.id,
           variant?.id || null,
@@ -710,30 +643,16 @@ export const CartProvider = ({ children }) => {
         );
 
         if (response.status === 'success') {
-          // Then get a fresh cart from the server to ensure consistency
-          console.log('Successfully added item, refreshing cart');
-          const refreshResponse = await cartService.getCart();
+          // Use the response directly instead of making another API call
+          setCart(response.data);
 
-          if (refreshResponse.status === 'success') {
-            console.log('Using refreshed cart data:', refreshResponse.data);
-            setCart(refreshResponse.data);
-            triggerCartSync(refreshResponse.data);
-
-            // Also store in localStorage for backup
-            if (user?.id) {
-              localStorage.setItem(`cart_user_${user.id}`, JSON.stringify(refreshResponse.data));
-            }
-          } else {
-            // Fallback to the response from addToCart if refresh fails
-            console.log('Using addToCart response data:', response.data);
-            setCart(response.data);
-            triggerCartSync(response.data);
-
-            // Also store in localStorage for backup
-            if (user?.id) {
-              localStorage.setItem(`cart_user_${user.id}`, JSON.stringify(response.data));
-            }
+          // Store in localStorage for backup only if needed
+          if (user?.id) {
+            localStorage.setItem(`cart_user_${user.id}`, JSON.stringify(response.data));
           }
+
+          // Only trigger sync if needed (not on every add)
+          triggerCartSync(response.data);
         }
       } else {
         // Use sessionStorage for unauthenticated users (temporary storage)
@@ -748,24 +667,18 @@ export const CartProvider = ({ children }) => {
         if (existingItemIndex >= 0) {
           // Update quantity if item exists
           if (replaceQuantity) {
-            // Replace the quantity
-            console.log('Replacing quantity for existing item in local cart');
             localCart[existingItemIndex].quantite = quantity;
           } else {
-            // Add to the existing quantity
-            console.log('Adding to quantity for existing item in local cart');
             localCart[existingItemIndex].quantite += quantity;
           }
         } else {
           // Add new item if it doesn't exist
-          console.log('Adding new item to local cart');
           localCart.push({
             id: product.id,
             nom_produit: product.nom_produit || product.nom,
             prix_produit: variant?.prix_supplement
               ? (product.prix_produit || product.prix) + variant.prix_supplement
               : (product.prix_produit || product.prix),
-            // Use embedded SVG placeholder if no image is provided
             image_produit: product.image_produit || product.image || PLACEHOLDER_IMAGE,
             quantite: quantity,
             variante_id: variant?.id || null,
@@ -783,11 +696,10 @@ export const CartProvider = ({ children }) => {
         // Update state
         setCart(updatedCart);
 
-        // Update shared cart and trigger sync
-        triggerCartSync(updatedCart);
+        // Update shared cart
+        localStorage.setItem('shared_cart', JSON.stringify(updatedCart));
       }
     } catch (err) {
-      console.error('Error adding to cart:', err);
       setError('Failed to add item to cart');
     } finally {
       setLoading(false);
@@ -801,27 +713,19 @@ export const CartProvider = ({ children }) => {
 
       if (isAuthenticated) {
         // Use API for authenticated users
-        console.log('Updating cart item with authenticated user:', {
-          itemId,
-          quantity,
-          userId: keycloak?.tokenParsed?.sub
-        });
 
         // First update the item
         const response = await cartService.updateCartItem(itemId, quantity);
 
         if (response.status === 'success') {
           // Then get a fresh cart from the server to ensure consistency
-          console.log('Successfully updated item, refreshing cart');
           const refreshResponse = await cartService.getCart();
 
           if (refreshResponse.status === 'success') {
-            console.log('Using refreshed cart data after update:', refreshResponse.data);
             setCart(refreshResponse.data);
             triggerCartSync(refreshResponse.data);
           } else {
             // Fallback to the response from updateCartItem if refresh fails
-            console.log('Using updateCartItem response data:', response.data);
             setCart(response.data);
             triggerCartSync(response.data);
           }
@@ -831,11 +735,8 @@ export const CartProvider = ({ children }) => {
         const localCart = JSON.parse(sessionStorage.getItem('cart')) || [];
         let itemIndex = -1;
 
-        console.log('Updating cart item for unauthenticated user:', { itemId, quantity });
-
         // Check if itemId is a string that can be split (local format)
         if (typeof itemId === 'string' && itemId.includes('_')) {
-          console.log('Updating item with local ID format:', itemId);
           // Extract product ID and variant ID from local item ID
           const parts = itemId.split('_');
           if (parts.length >= 3) {
@@ -847,11 +748,10 @@ export const CartProvider = ({ children }) => {
               (variantId === '0' ? !item.variante_id : item.variante_id.toString() === variantId)
             );
           } else {
-            console.warn('Invalid item ID format:', itemId);
+            // Invalid item ID format
           }
         } else {
           // Handle numeric or non-string itemId (direct item ID from API)
-          console.log('Updating item with direct ID:', itemId);
 
           // Find the item in the local cart that matches this ID
           itemIndex = localCart.findIndex(item => {
@@ -860,16 +760,14 @@ export const CartProvider = ({ children }) => {
           });
         }
 
-        console.log('Found item at index:', itemIndex);
+
 
         if (itemIndex >= 0) {
           if (quantity <= 0) {
             // Remove item if quantity is 0 or less
-            console.log('Removing item because quantity is 0 or less');
             localCart.splice(itemIndex, 1);
           } else {
             // Update quantity
-            console.log(`Updating quantity from ${localCart[itemIndex].quantite} to ${quantity}`);
             localCart[itemIndex].quantite = quantity;
           }
 
@@ -885,12 +783,10 @@ export const CartProvider = ({ children }) => {
           // Update shared cart and trigger sync
           triggerCartSync(updatedCart);
         } else {
-          console.warn('Item not found in cart:', itemId);
           setError('Item not found in cart');
         }
       }
     } catch (err) {
-      console.error('Error updating cart item:', err);
       setError('Failed to update cart item');
     } finally {
       setLoading(false);
@@ -901,30 +797,22 @@ export const CartProvider = ({ children }) => {
   const removeFromCart = async (itemId) => {
     try {
       setLoading(true);
-      console.log('Removing item from cart:', itemId);
 
       if (isAuthenticated) {
         // Use API for authenticated users
-        console.log('Removing cart item with authenticated user:', {
-          itemId,
-          userId: keycloak?.tokenParsed?.sub
-        });
 
         // First remove the item
         const response = await cartService.removeFromCart(itemId);
 
         if (response.status === 'success') {
           // Then get a fresh cart from the server to ensure consistency
-          console.log('Successfully removed item, refreshing cart');
           const refreshResponse = await cartService.getCart();
 
           if (refreshResponse.status === 'success') {
-            console.log('Using refreshed cart data after removal:', refreshResponse.data);
             setCart(refreshResponse.data);
             triggerCartSync(refreshResponse.data);
           } else {
             // Fallback to the response from removeFromCart if refresh fails
-            console.log('Using removeFromCart response data:', response.data);
             setCart(response.data);
             triggerCartSync(response.data);
           }
@@ -936,7 +824,6 @@ export const CartProvider = ({ children }) => {
 
         // Check if itemId is a string that can be split (local format)
         if (typeof itemId === 'string' && itemId.includes('_')) {
-          console.log('Removing item with local ID format:', itemId);
           // Extract product ID and variant ID from local item ID
           const parts = itemId.split('_');
           if (parts.length >= 3) {
@@ -948,12 +835,11 @@ export const CartProvider = ({ children }) => {
                 (variantId === '0' ? !item.variante_id : item.variante_id.toString() === variantId))
             );
           } else {
-            console.warn('Invalid item ID format:', itemId);
+            // Invalid item ID format
             updatedItems = localCart;
           }
         } else {
           // Handle numeric or non-string itemId (direct item ID from API)
-          console.log('Removing item with direct ID:', itemId);
 
           // Find the item in the local cart that matches this ID
           updatedItems = localCart.filter(item => {
@@ -975,7 +861,6 @@ export const CartProvider = ({ children }) => {
         triggerCartSync(updatedCart);
       }
     } catch (err) {
-      console.error('Error removing from cart:', err);
       setError('Failed to remove item from cart');
     } finally {
       setLoading(false);
@@ -989,16 +874,12 @@ export const CartProvider = ({ children }) => {
 
       if (isAuthenticated) {
         // Use API for authenticated users
-        console.log('Clearing cart with authenticated user:', {
-          userId: keycloak?.tokenParsed?.sub
-        });
 
         // First clear the cart
         const response = await cartService.clearCart();
 
         if (response.status === 'success') {
           // Then get a fresh cart from the server to ensure consistency
-          console.log('Successfully cleared cart, refreshing');
           const refreshResponse = await cartService.getCart();
 
           // Clear user-specific cart in localStorage
@@ -1010,12 +891,10 @@ export const CartProvider = ({ children }) => {
           }
 
           if (refreshResponse.status === 'success') {
-            console.log('Using refreshed cart data after clearing:', refreshResponse.data);
             setCart(refreshResponse.data);
             triggerCartSync(refreshResponse.data);
           } else {
             // Fallback to empty cart if refresh fails
-            console.log('Using empty cart after clearing');
             const emptyCart = { items: [], nombre_items: 0, sous_total: 0, total: 0 };
             setCart(emptyCart);
             triggerCartSync(emptyCart);
@@ -1031,7 +910,6 @@ export const CartProvider = ({ children }) => {
         triggerCartSync(emptyCart);
       }
     } catch (err) {
-      console.error('Error clearing cart:', err);
       setError('Failed to clear cart');
     } finally {
       setLoading(false);
@@ -1046,7 +924,6 @@ export const CartProvider = ({ children }) => {
       setLoading(true);
 
       if (isAuthenticated && keycloak?.tokenParsed?.sub) {
-        console.log('Clearing cart for current user:', keycloak.tokenParsed.sub);
 
         // Clear the cart for the current user
         const response = await cartService.clearCartForUser(keycloak.tokenParsed.sub);
@@ -1069,7 +946,6 @@ export const CartProvider = ({ children }) => {
 
       return false;
     } catch (err) {
-      console.error('Error clearing cart for current user:', err);
       setError('Failed to clear cart for current user');
       return false;
     } finally {

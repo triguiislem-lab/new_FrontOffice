@@ -50,11 +50,9 @@ export const WishlistProvider = ({ children }) => {
       setLoading(true);
 
       if (isAuthenticated) {
-        console.log('Force refreshing wishlist from server');
         const response = await wishlistService.getWishlist();
 
         if (response.status === 'success') {
-          console.log('Refreshed wishlist data:', response.data);
           setWishlist(response.data);
 
           // Update shared wishlist for cross-browser sync
@@ -65,7 +63,6 @@ export const WishlistProvider = ({ children }) => {
 
       return false;
     } catch (err) {
-      console.error('Error refreshing wishlist:', err);
       setError('Failed to refresh wishlist data');
       return false;
     } finally {
@@ -81,26 +78,21 @@ export const WishlistProvider = ({ children }) => {
 
         // Only process if this is a newer sync than our last one
         if (syncData.timestamp > lastSyncTime) {
-          console.log('Syncing wishlist from another tab', syncData);
           setLastSyncTime(syncData.timestamp);
 
           // For immediate feedback, check if there's a shared wishlist
           const sharedWishlist = JSON.parse(localStorage.getItem('shared_wishlist'));
           if (sharedWishlist) {
-            console.log('Using shared wishlist from localStorage for immediate feedback');
             setWishlist(sharedWishlist);
           }
 
           // Then refresh from server if authenticated (in the background)
           if (isAuthenticated) {
-            console.log('Authenticated user detected, refreshing wishlist from server in background');
 
             // Use setTimeout to avoid blocking the UI
             setTimeout(() => {
               // Use our refreshWishlist function to ensure consistent behavior
-              refreshWishlist().catch(err => {
-                console.error('Error refreshing wishlist during sync:', err);
-
+              refreshWishlist().catch(() => {
                 // Fallback to direct API call if refreshWishlist fails
                 wishlistService.getWishlist().then(response => {
                   if (response.status === 'success' && response.data) {
@@ -111,8 +103,8 @@ export const WishlistProvider = ({ children }) => {
                       localStorage.setItem(`favorites_user_${user.id}`, JSON.stringify(response.data));
                     }
                   }
-                }).catch(syncErr => {
-                  console.error('Error syncing wishlist between tabs:', syncErr);
+                }).catch(() => {
+                  // Silent fail
                 });
               });
             }, 0);
@@ -133,12 +125,9 @@ export const WishlistProvider = ({ children }) => {
     let refreshInterval = null;
 
     if (isAuthenticated) {
-      console.log('Setting up periodic wishlist refresh for authenticated user');
-
       // Set up interval for periodic refresh
       refreshInterval = setInterval(async () => {
         try {
-          console.log('Refreshing wishlist data...');
           const response = await wishlistService.getWishlist();
           if (response.status === 'success' && response.data) {
             setWishlist(response.data);
@@ -152,7 +141,7 @@ export const WishlistProvider = ({ children }) => {
             triggerWishlistSync(response.data);
           }
         } catch (err) {
-          console.error('Error refreshing wishlist:', err);
+          // Silent fail
         }
       }, 30000); // Refresh every 30 seconds
     }
@@ -168,14 +157,8 @@ export const WishlistProvider = ({ children }) => {
   useEffect(() => {
     // Function to handle auth state changes
     const handleAuthStateChange = async () => {
-      console.log('Auth state changed for wishlist:', {
-        prevState: prevAuthStateRef.current,
-        currentState: { isAuthenticated, userId: user?.id }
-      });
-
       // Case 1: User logged out
       if (prevAuthStateRef.current.isAuthenticated && !isAuthenticated) {
-        console.log('User logged out, handling wishlist transition');
 
         // Get the current wishlist before clearing
         const currentWishlist = { ...wishlist };
@@ -187,7 +170,6 @@ export const WishlistProvider = ({ children }) => {
 
         // Convert the authenticated wishlist to local format
         if (currentWishlist.items && currentWishlist.items.length > 0) {
-          console.log('Converting authenticated wishlist to local format');
 
           // Convert wishlist items to local format
           const localItems = currentWishlist.items.map(item => ({
@@ -232,13 +214,10 @@ export const WishlistProvider = ({ children }) => {
 
           // Also update shared wishlist
           triggerWishlistSync(localWishlistObj);
-
-          console.log('Successfully converted authenticated wishlist to local format');
         } else {
           // Check for guest wishlist data
           const localWishlist = JSON.parse(localStorage.getItem('favorites')) || [];
           if (localWishlist.length > 0) {
-            console.log('Using local wishlist for logged out user');
 
             const localWishlistObj = {
               liste_souhait: {
@@ -284,7 +263,6 @@ export const WishlistProvider = ({ children }) => {
 
       // Case 2: User logged in
       if (!prevAuthStateRef.current.isAuthenticated && isAuthenticated) {
-        console.log('User logged in, handling wishlist transition');
 
         // Check if we have local wishlist items to merge with server
         const localWishlist = JSON.parse(localStorage.getItem('favorites')) || [];
@@ -296,7 +274,6 @@ export const WishlistProvider = ({ children }) => {
           const response = await wishlistService.getWishlist();
 
           if (response.status === 'success') {
-            console.log('Successfully loaded user wishlist after login');
 
             // Store in localStorage for backup and cross-browser sync
             if (user?.id) {
@@ -308,7 +285,6 @@ export const WishlistProvider = ({ children }) => {
 
             // Check if server wishlist is empty and we have local items
             if (response.data.items.length === 0 && hasLocalItems) {
-              console.log('Server wishlist is empty, syncing local items');
 
               // Add each local item to the server wishlist
               for (const item of localWishlist) {
@@ -319,7 +295,7 @@ export const WishlistProvider = ({ children }) => {
                     item.note || ''
                   );
                 } catch (addError) {
-                  console.error('Error adding local item to server wishlist:', addError);
+                  // Silent fail
                 }
               }
 
@@ -327,7 +303,6 @@ export const WishlistProvider = ({ children }) => {
               const refreshResponse = await wishlistService.getWishlist();
 
               if (refreshResponse.status === 'success') {
-                console.log('Using refreshed wishlist after sync');
                 setWishlist(refreshResponse.data);
 
                 // Clear local wishlist after successful sync
@@ -350,7 +325,6 @@ export const WishlistProvider = ({ children }) => {
 
               // If we have local items, try to merge them with server
               if (hasLocalItems && response.data.items.length > 0) {
-                console.log('Both server and local wishlist have items, syncing');
 
                 // Add each local item to the server wishlist
                 for (const item of localWishlist) {
@@ -361,7 +335,7 @@ export const WishlistProvider = ({ children }) => {
                       item.note || ''
                     );
                   } catch (addError) {
-                    console.error('Error adding local item to server wishlist:', addError);
+                    // Silent fail
                   }
                 }
 
@@ -369,7 +343,6 @@ export const WishlistProvider = ({ children }) => {
                 const refreshResponse = await wishlistService.getWishlist();
 
                 if (refreshResponse.status === 'success') {
-                  console.log('Using refreshed wishlist after sync');
                   setWishlist(refreshResponse.data);
 
                   // Clear local wishlist after successful sync
@@ -387,7 +360,7 @@ export const WishlistProvider = ({ children }) => {
             }
           }
         } catch (error) {
-          console.error('Error loading user wishlist after login:', error);
+          // Silent fail
         }
       }
 
@@ -408,7 +381,6 @@ export const WishlistProvider = ({ children }) => {
     const loadWishlist = async () => {
       // Skip if we've already loaded the wishlist
       if (hasLoadedWishlistRef.current) {
-        console.log('Wishlist already loaded, skipping duplicate load');
         return;
       }
 
@@ -417,23 +389,17 @@ export const WishlistProvider = ({ children }) => {
         // Mark as loaded to prevent duplicate loads
         hasLoadedWishlistRef.current = true;
 
-        console.log('Loading wishlist with auth state:', isAuthenticated);
-
         if (isAuthenticated) {
           // If user is authenticated, try to get wishlist from API
           try {
-            console.log('Attempting to load wishlist from API');
             const response = await wishlistService.getWishlist();
-            console.log('Wishlist API response:', response);
 
             if (response.status === 'success' && response.data) {
-              console.log('Successfully loaded wishlist from API');
               setWishlist(response.data);
 
               // Try to sync any local items that might exist
               const localWishlist = JSON.parse(localStorage.getItem(`favorites_user_${user?.id}`)) || [];
               if (localWishlist.length > 0) {
-                console.log('Found local wishlist items to sync:', localWishlist.length);
 
                 // Add each local item to the server wishlist
                 for (const item of localWishlist) {
@@ -457,11 +423,8 @@ export const WishlistProvider = ({ children }) => {
               throw new Error('Invalid API response format');
             }
           } catch (apiError) {
-            console.error('Error loading wishlist from API:', apiError);
-
             // If API fails, fallback to localStorage
             const localWishlist = JSON.parse(localStorage.getItem(`favorites_user_${user?.id}`)) || [];
-            console.log('Falling back to local wishlist:', localWishlist.length);
 
             // Format local wishlist to match API response format
             setWishlist({
@@ -492,7 +455,6 @@ export const WishlistProvider = ({ children }) => {
           }
         } else {
           // For unauthenticated users, use sessionStorage
-          console.log('User not authenticated, using sessionStorage for wishlist');
           const localWishlist = JSON.parse(sessionStorage.getItem('favorites')) || [];
 
           setWishlist({
@@ -522,7 +484,6 @@ export const WishlistProvider = ({ children }) => {
           });
         }
       } catch (err) {
-        console.error('Error loading wishlist:', err);
         setError('Failed to load wishlist data');
 
         // Fallback to localStorage in case of any error
@@ -567,8 +528,6 @@ export const WishlistProvider = ({ children }) => {
 
   // Check if a product is in the wishlist
   const isInWishlist = async (productId, variantId = null) => {
-    console.log('Checking if product is in wishlist:', { productId, variantId, isAuthenticated });
-
     // First check local state for immediate response
     const inLocalState = wishlist.items.some(item =>
       item.produit.id.toString() === productId.toString() &&
@@ -576,8 +535,6 @@ export const WishlistProvider = ({ children }) => {
         ? (item.variante && item.variante.id.toString() === variantId.toString())
         : !item.variante)
     );
-
-    console.log('Local state check result:', inLocalState);
 
     // For non-authenticated users or for immediate response, return the local check
     if (!isAuthenticated) {
@@ -587,19 +544,16 @@ export const WishlistProvider = ({ children }) => {
     // For authenticated users, also check with the API in the background
     try {
       const response = await wishlistService.checkWishlist(productId, variantId);
-      console.log('API response for wishlist check:', response);
       const apiResult = response.status === 'success' && response.data.in_wishlist;
 
       // If there's a mismatch between local state and API, refresh the wishlist
       if (apiResult !== inLocalState) {
-        console.log('Mismatch between local state and API, refreshing wishlist');
         // Use setTimeout to avoid blocking the UI
         setTimeout(() => refreshWishlist(), 0);
       }
 
       return apiResult;
     } catch (err) {
-      console.error('Error checking wishlist:', err);
       // Fallback to local state if API fails
       return inLocalState;
     }
@@ -612,12 +566,6 @@ export const WishlistProvider = ({ children }) => {
 
       if (isAuthenticated) {
         // Use API for authenticated users
-        console.log('Adding to wishlist with authenticated user:', {
-          productId: product.id,
-          variantId: variant?.id,
-          note,
-          userId: keycloak?.tokenParsed?.sub
-        });
 
         const response = await wishlistService.addToWishlist(
           product.id,
@@ -699,7 +647,6 @@ export const WishlistProvider = ({ children }) => {
         }
       }
     } catch (err) {
-      console.error('Error adding to wishlist:', err);
       setError('Failed to add item to wishlist');
     } finally {
       setLoading(false);
@@ -710,14 +657,9 @@ export const WishlistProvider = ({ children }) => {
   const removeFromWishlist = async (itemId) => {
     try {
       setLoading(true);
-      console.log('Removing item from wishlist:', itemId);
 
       if (isAuthenticated) {
         // Use API for authenticated users
-        console.log('Removing wishlist item with authenticated user:', {
-          itemId,
-          userId: keycloak?.tokenParsed?.sub
-        });
 
         const response = await wishlistService.removeFromWishlist(itemId);
 
@@ -739,7 +681,6 @@ export const WishlistProvider = ({ children }) => {
 
         // Check if itemId is a string that can be split (local format)
         if (typeof itemId === 'string' && itemId.includes('_')) {
-          console.log('Removing item with local ID format:', itemId);
           // Extract product ID and variant ID from local item ID
           const parts = itemId.split('_');
           if (parts.length >= 3) {
@@ -751,12 +692,10 @@ export const WishlistProvider = ({ children }) => {
                 (variantId === '0' ? !item.variante_id : item.variante_id?.toString() === variantId))
             );
           } else {
-            console.warn('Invalid item ID format:', itemId);
             updatedWishlist = localWishlist;
           }
         } else {
           // Handle numeric or non-string itemId (direct item ID from API)
-          console.log('Removing item with direct ID:', itemId);
 
           // Find the item in the local wishlist that matches this ID
           updatedWishlist = localWishlist.filter(item => {
@@ -801,7 +740,6 @@ export const WishlistProvider = ({ children }) => {
         triggerWishlistSync(updatedWishlistObj);
       }
     } catch (err) {
-      console.error('Error removing from wishlist:', err);
       setError('Failed to remove item from wishlist');
     } finally {
       setLoading(false);
@@ -812,15 +750,9 @@ export const WishlistProvider = ({ children }) => {
   const moveToCart = async (itemId, quantity = 1) => {
     try {
       setLoading(true);
-      console.log('Moving item from wishlist to cart:', { itemId, quantity });
 
       if (isAuthenticated) {
         // Use API for authenticated users
-        console.log('Moving wishlist item to cart with authenticated user:', {
-          itemId,
-          quantity,
-          userId: keycloak?.tokenParsed?.sub
-        });
 
         const response = await wishlistService.moveToCart(itemId, quantity);
 
@@ -846,7 +778,6 @@ export const WishlistProvider = ({ children }) => {
 
         // Check if itemId is a string that can be split (local format)
         if (typeof itemId === 'string' && itemId.includes('_')) {
-          console.log('Moving item with local ID format:', itemId);
           // Extract product ID and variant ID from local item ID
           const parts = itemId.split('_');
           if (parts.length >= 3) {
@@ -865,11 +796,10 @@ export const WishlistProvider = ({ children }) => {
               }
             }
           } else {
-            console.warn('Invalid item ID format:', itemId);
+            // Invalid item ID format
           }
         } else {
           // Handle numeric or non-string itemId (direct item ID from API)
-          console.log('Moving item with direct ID:', itemId);
 
           // Find the item in the local wishlist that matches this ID
           itemIndex = localWishlist.findIndex(item => {
@@ -885,7 +815,7 @@ export const WishlistProvider = ({ children }) => {
           }
         }
 
-        console.log('Found item at index:', itemIndex, 'with data:', productData);
+
 
         if (itemIndex >= 0 && productData) {
           // Add to cart
@@ -936,12 +866,10 @@ export const WishlistProvider = ({ children }) => {
           // Trigger sync to update other tabs/devices
           triggerWishlistSync(updatedWishlist);
         } else {
-          console.error('Item not found in wishlist:', itemId);
           setError('Item not found in wishlist');
         }
       }
     } catch (err) {
-      console.error('Error moving item to cart:', err);
       setError('Failed to move item to cart');
     } finally {
       setLoading(false);
@@ -950,12 +878,6 @@ export const WishlistProvider = ({ children }) => {
 
   // Toggle wishlist status (add or remove)
   const toggleWishlist = async (product, variant = null) => {
-    console.log('Toggling wishlist status for product:', {
-      productId: product.id,
-      variantId: variant?.id,
-      isAuthenticated
-    });
-
     // First check locally for immediate feedback
     const localCheck = wishlist.items.some(item =>
       item.produit.id.toString() === product.id.toString() &&
@@ -964,12 +886,9 @@ export const WishlistProvider = ({ children }) => {
         : !item.variante)
     );
 
-    console.log('Local check shows product in wishlist:', localCheck);
-
     // Apply optimistic update for immediate UI feedback
     if (localCheck) {
       // Item is in wishlist, remove it optimistically
-      console.log('Optimistically removing item from wishlist');
 
       // Create a copy of the current wishlist
       const updatedItems = wishlist.items.filter(item =>
@@ -1003,32 +922,27 @@ export const WishlistProvider = ({ children }) => {
 
         if (item) {
           itemId = item.id;
-          console.log('Found item to remove:', itemId);
 
           // Perform actual removal in the background
-          removeFromWishlist(itemId).catch(error => {
-            console.error('Error removing from wishlist:', error);
+          removeFromWishlist(itemId).catch(() => {
             // Revert optimistic update if the API call fails
             refreshWishlist();
           });
         } else {
-          console.error('Item not found in wishlist');
+          // Item not found in wishlist
         }
       } else {
         // For unauthenticated users, construct a local ID
         itemId = `local_${product.id}_${variant?.id || 0}`;
-        console.log('Constructed local ID to remove:', itemId);
 
         // Perform actual removal in the background
-        removeFromWishlist(itemId).catch(error => {
-          console.error('Error removing from wishlist:', error);
+        removeFromWishlist(itemId).catch(() => {
           // Revert optimistic update if the operation fails
           refreshWishlist();
         });
       }
     } else {
       // Item is not in wishlist, add it optimistically
-      console.log('Optimistically adding product to wishlist');
 
       // Create a new item
       const newItem = {
@@ -1059,8 +973,7 @@ export const WishlistProvider = ({ children }) => {
       });
 
       // Perform actual addition in the background
-      addToWishlist(product, variant).catch(error => {
-        console.error('Error adding to wishlist:', error);
+      addToWishlist(product, variant).catch(() => {
         // Revert optimistic update if the API call fails
         refreshWishlist();
       });
@@ -1068,15 +981,13 @@ export const WishlistProvider = ({ children }) => {
 
     // Also perform the actual check in the background to ensure consistency
     isInWishlist(product.id, variant?.id).then(inWishlist => {
-      console.log('API check shows product in wishlist:', inWishlist);
       // If there's a mismatch between our optimistic update and the actual state,
       // refresh the wishlist to ensure consistency
       if (inWishlist !== localCheck) {
-        console.log('Mismatch between optimistic update and actual state, refreshing wishlist');
         refreshWishlist();
       }
-    }).catch(error => {
-      console.error('Error checking wishlist status:', error);
+    }).catch(() => {
+      // Silent fail
     });
   };
 

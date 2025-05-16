@@ -6,6 +6,12 @@ import LoadingUtilsDemo from './pages/LoadingUtilsDemo';
 import { lazyWithPreload, preloadMultipleDuringIdle } from './utils/lazyLoader.jsx';
 import { LOADING_MESSAGES } from './utils/loadingConfig';
 
+// Import BackButtonDemo
+const BackButtonDemo = lazyWithPreload(
+  () => import('./pages/BackButtonDemo.jsx'),
+  { fallbackMessage: 'Chargement de la démo...' }
+);
+
 // Lazy load components with preloading capability
 const Home = lazyWithPreload(
   () => import('./pages/Home.jsx'),
@@ -87,12 +93,36 @@ const Marque = lazyWithPreload(
   { fallbackMessage: 'Chargement des marques...' }
 );
 
+// Order management pages
+const OrdersPage = lazyWithPreload(
+  () => import('./commandes/OrdersPage.jsx'),
+  { fallbackMessage: 'Chargement des commandes...' }
+);
+
+const OrderDetailPage = lazyWithPreload(
+  () => import('./commandes/OrderDetailPage.jsx'),
+  { fallbackMessage: 'Chargement des détails de la commande...' }
+);
+
+const FixedOrderDetailPage = lazyWithPreload(
+  () => import('./commandes/FixedOrderDetailPage.jsx'),
+  { fallbackMessage: 'Chargement des détails de la commande...' }
+);
+
+const CreateOrderPage = lazyWithPreload(
+  () => import('./commandes/CreateOrderPage.jsx'),
+  { fallbackMessage: 'Chargement du formulaire de commande...' }
+);
+
 // Preload frequently accessed pages during idle time
 if (typeof window !== 'undefined') {
   preloadMultipleDuringIdle([
     Home.preload,
     ProductsPage.preload,
-    ProductDetailPage.preload
+    ProductDetailPage.preload,
+    Cart.preload,
+    OrdersPage.preload,
+    CreateOrderPage.preload
   ]);
 }
 
@@ -205,6 +235,27 @@ export const routes = [
     name: "LoadingUtilsDemo",
     path: "/loading-utils", // Route pour la démo des utilitaires de chargement
     element: <LoadingUtilsDemo />,
+  },
+  {
+    name: "BackButtonDemo",
+    path: "/back-button-demo", // Route pour la démo du bouton retour
+    element: <BackButtonDemo />,
+  },
+  // Order management routes
+  {
+    name: "OrdersPage",
+    path: "/commandes",
+    element: <PrivateRoute><OrdersPage /></PrivateRoute>,
+  },
+  {
+    name: "OrderDetailPage",
+    path: "/commandes/:orderId",
+    element: <PrivateRoute><FixedOrderDetailPage /></PrivateRoute>,
+  },
+  {
+    name: "CreateOrderPage",
+    path: "/commander",
+    element: <PrivateRoute><CreateOrderPage /></PrivateRoute>,
   },
 ];
 

@@ -157,7 +157,7 @@ POST /api/cart/merge
 **Corps de la requête :**
 ```json
 {
-  "guest_cart_id": 2
+  "guest_id": "550e8400-e29b-41d4-a716-446655440000"
 }
 ```
 
@@ -341,7 +341,7 @@ POST /api/wishlist/items/{id}/move-to-cart
 | produit_id | Requis, existe dans la table produits |
 | variante_id | Optionnel, existe dans la table produit_variantes |
 | quantite | Requis, entier, minimum 1 |
-| guest_cart_id | Requis pour la fusion, existe dans la table paniers |
+| guest_id | Requis pour la fusion, doit être un UUID valide au format "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx" |
 
 ### Liste de Souhaits
 

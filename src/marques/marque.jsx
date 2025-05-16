@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Eye, Award, Globe, ArrowRight, Search } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import DynamicButton from "../pages/won";
+import DynamicButton from "../Components/DynamicButton";
 import LoadingSpinner from "../Components/LoadingSpinner";
 
 const Marque = () => {

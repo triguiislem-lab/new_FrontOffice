@@ -56,11 +56,10 @@ const FavoritesPage = () => {
                 const primaryImage = response.data.images.find(img => img.is_primary) || response.data.images[0];
                 if (primaryImage.direct_url) {
                   newImages[productId] = primaryImage.direct_url;
-                  console.log(`Fetched image for product ${productId}:`, primaryImage.direct_url);
                 }
               }
             } catch (error) {
-              console.error(`Error fetching images for product ${productId}:`, error);
+              // Silent fail
             }
           })
         );
@@ -70,10 +69,9 @@ const FavoritesPage = () => {
             ...prevImages,
             ...newImages
           }));
-          console.log('Updated product images:', newImages);
         }
       } catch (error) {
-        console.error('Error fetching product images:', error);
+        // Silent fail
       }
     };
 
@@ -215,7 +213,6 @@ const FavoritesPage = () => {
                       alt={item.produit?.nom || 'Produit'}
                       className="w-full h-96 object-cover transition-transform duration-700 group-hover:scale-105"
                       onError={(e) => {
-                        console.log('Image failed to load:', e.target.src);
                         e.target.onerror = null;
                         e.target.src = "/placeholder-product.jpg";
                       }}

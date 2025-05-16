@@ -5,6 +5,52 @@ import { useAuth } from '../../Contexts/AuthContext.jsx';
 import { useCart } from '../../Contexts/CartContext.jsx';
 import { useWishlist } from '../../Contexts/WishlistContext.jsx';
 
+// Error boundary component for navbar
+function ErrorBoundary({ children }) {
+  const [hasError, setHasError] = useState(false);
+  const [error, setError] = useState(null);
+
+  // Reset error state when children change
+  useEffect(() => {
+    setHasError(false);
+    setError(null);
+  }, [children]);
+
+  // If there's an error, show a fallback UI
+  if (hasError) {
+    return (
+      <div className="bg-white shadow-md py-4 px-6 flex justify-between items-center">
+        <div className="flex items-center">
+          <Link to="/" className="flex items-center">
+            <img
+              src="/img/logo.jfif"
+              alt="Jihen-line Logo"
+              className="h-14 rounded-lg shadow-sm"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = "/img/placeholder-logo.svg";
+              }}
+            />
+          </Link>
+        </div>
+        <div className="text-red-500 text-sm">
+          <p>Problème de chargement du menu. <button onClick={() => window.location.reload()} className="underline">Rafraîchir</button></p>
+        </div>
+      </div>
+    );
+  }
+
+  // Try to render children, catch errors
+  try {
+    return children;
+  } catch (error) {
+    console.error("Error in Navbar:", error);
+    setHasError(true);
+    setError(error);
+    return null;
+  }
+}
+
 function Navbar() {
   const { isAuthenticated, keycloak, loading, user } = useAuth();
   const { cart } = useCart();
@@ -40,23 +86,53 @@ function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
+  // State to track API errors
+  const [apiError, setApiError] = useState(false);
+
   useEffect(() => {
-    axios.get("https://laravel-api.fly.dev/api/marques")
-      .then(response => setBrands(response.data))
-      .catch(error => console.error("Erreur de chargement des marques :", error));
+    // Fetch brands with error handling
+    const fetchBrands = async () => {
+      try {
+        const response = await axios.get("https://laravel-api.fly.dev/api/marques");
+        setBrands(response.data);
+        setApiError(false);
+      } catch (error) {
+        console.error("Erreur de chargement des marques :", error);
+        setApiError(true);
+        // Set empty brands array to prevent UI errors
+        setBrands([]);
+      }
+    };
+
+    fetchBrands();
   }, []);
 
 
   const handleLogin = () => {
-    keycloak.login({ redirectUri: window.location.origin + '/home' });
+    try {
+      keycloak.login({ redirectUri: window.location.origin + '/home' });
+    } catch (error) {
+      console.error('Error during login:', error);
+      alert('Problème de connexion. Veuillez réessayer plus tard.');
+    }
   };
 
   const handleRegister = () => {
-    keycloak.register({ redirectUri: window.location.origin + '/home' });
+    try {
+      keycloak.register({ redirectUri: window.location.origin + '/home' });
+    } catch (error) {
+      console.error('Error during registration:', error);
+      alert('Problème d\'inscription. Veuillez réessayer plus tard.');
+    }
   };
 
   const handleLogout = () => {
-    keycloak.logout({ redirectUri: window.location.origin + '/home' });
+    try {
+      keycloak.logout({ redirectUri: window.location.origin + '/home' });
+    } catch (error) {
+      console.error('Error during logout:', error);
+      alert('Problème de déconnexion. Veuillez réessayer plus tard.');
+    }
   };
 
   const toggleNav = () => setIsNavOpen(!isNavOpen);
@@ -98,6 +174,14 @@ function Navbar() {
             src="/img/logo.jfif"
             alt="Jihen-line Logo"
             className="h-14 rounded-lg shadow-sm hover:shadow-md transition-all duration-300 hover:scale-105"
+            onError={(e) => {
+              // Only log in development
+              if (process.env.NODE_ENV !== 'production') {
+                console.log("Logo image failed to load, using fallback");
+              }
+              e.target.onerror = null;
+              e.target.src = "/img/placeholder-logo.svg";
+            }}
           />
         </Link>
 
@@ -225,6 +309,12 @@ function Navbar() {
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                       </svg>
                       Mon profil
+                    </Link>
+                    <Link to="/commandes" className="px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 flex items-center group transition-colors duration-300">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-3 text-gray-400 group-hover:text-[#A67B5B] transition-colors duration-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
+                      </svg>
+                      Mes commandes
                     </Link>
                     <button
                       onClick={() => {
@@ -501,4 +591,11 @@ function Navbar() {
   );
 }
 
-export default Navbar;
+// Export the Navbar wrapped in an ErrorBoundary
+export default function SafeNavbar() {
+  return (
+    <ErrorBoundary>
+      <Navbar />
+    </ErrorBoundary>
+  );
+}

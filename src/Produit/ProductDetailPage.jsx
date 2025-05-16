@@ -3,7 +3,8 @@ import { useParams, useNavigate } from "react-router-dom";
 import { useAuth } from "@/Contexts/AuthContext";
 import { useCart } from "@/contexts/CartContext";
 import axios from "axios";
-import DynamicButton from "../pages/won";
+import DynamicButton from "../Components/DynamicButton";
+import BackButton from "../Components/BackButton";
 import SimilarProducts from "./SimilarProducts";
 import "../style/animations.css";
 import LoadingSpinner from "../Components/LoadingSpinner";
@@ -48,11 +49,6 @@ const ProductDetailPage = () => {
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageLoading, setImageLoading] = useState(true);
   const [imageTransition, setImageTransition] = useState(false);
-  const [debugInfo, setDebugInfo] = useState({
-    hasImages: false,
-    selectedImageUrl: null,
-    articleImageUrl: null
-  });
 
   const isInStock = (item) => {
     return item && (item.quantite_produit > 0 || item.stock > 0);
@@ -183,7 +179,6 @@ const ProductDetailPage = () => {
   useEffect(() => {
     if (productImages && productImages.length > 0 && !selectedImage) {
       const primaryImage = productImages.find(img => img.is_primary) || productImages[0];
-      console.log("Initialisation de l'image sélectionnée:", primaryImage);
       setSelectedImage(primaryImage);
       setImageLoading(false);
     }
@@ -236,7 +231,6 @@ const ProductDetailPage = () => {
             setMarque("Marque inconnue");
           }
         } catch (brandError) {
-          console.error("Erreur lors du chargement de la marque:", brandError);
           setMarque("Marque inconnue");
         }
 
@@ -247,30 +241,24 @@ const ProductDetailPage = () => {
             setProductImages(imageData.images);
             const primaryImage = imageData.images.find(img => img.is_primary) || imageData.images[0];
             setSelectedImage(primaryImage);
-
-            setDebugInfo(prev => ({
-              ...prev,
-              hasImages: true,
-              selectedImageUrl: primaryImage?.direct_url || null
-            }));
-
             setImageLoading(false);
           } else {
-            console.warn("Aucune image trouvée pour ce produit");
-            setDebugInfo(prev => ({
-              ...prev,
-              hasImages: false
-            }));
+            // Log warning only in development
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn("Aucune image trouvée pour ce produit");
+            }
           }
         } catch (imageError) {
-          console.error("Erreur lors du chargement des images du produit:", imageError);
-          setDebugInfo(prev => ({
-            ...prev,
-            error: imageError.message
-          }));
+          // Log error only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.error("Erreur lors du chargement des images du produit:", imageError);
+          }
         }
       } catch (error) {
-        console.error("Erreur lors du chargement des détails du produit:", error);
+        // Log error only in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.error("Erreur lors du chargement des détails du produit:", error);
+        }
         setError("Erreur lors du chargement des détails du produit.");
       } finally {
         setLoading(false);
@@ -279,6 +267,10 @@ const ProductDetailPage = () => {
 
     fetchProductData();
   }, [id]);
+
+  // Fetch product attributes
+  useEffect(() => {
+    if (!id) return;
 
     fetch(`https://laravel-api.fly.dev/api/produits/${id}/attributs`)
       .then(res => res.json())
@@ -392,9 +384,17 @@ const ProductDetailPage = () => {
         setAttributGroups(groups);
       })
       .catch((error) => {
-        console.error('Error loading attributes:', error);
+        // Log error only in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Error loading attributes:', error);
+        }
         setError("Erreur lors du chargement des attributs.");
       });
+  }, [id, commonAttributeNames]);
+
+  // Fetch product variants
+  useEffect(() => {
+    if (!id) return;
 
     fetch(`https://laravel-api.fly.dev/api/produits/${id}/variantes`)
       .then(res => res.json())
@@ -415,8 +415,14 @@ const ProductDetailPage = () => {
         }
       })
       .catch(() => setError("Erreur lors du chargement des variantes."));
+  }, [id]);
 
-    const favorites = JSON.parse(localStorage.getItem(isAuthenticated ? `favorites_user_${user?.id}` : "favorites")) || [];
+  // Check if product is in favorites
+  useEffect(() => {
+    if (!id) return;
+
+    const storageKey = isAuthenticated ? `favorites_user_${user?.id}` : "favorites";
+    const favorites = JSON.parse(localStorage.getItem(storageKey)) || [];
     const isFav = favorites.some(item => item.id === parseInt(id));
     setIsFavorite(isFav);
   }, [id, user, isAuthenticated]);
@@ -607,53 +613,43 @@ const ProductDetailPage = () => {
   };
 
   const handleAddToCart = async () => {
-    if (!article) return;
+    if (!article || cartLoading) return;
+
+    // Show immediate feedback to user
+    setAddedToCart(true);
 
     try {
-      let imageUrl = article.image_produit;
-      if (selectedVariante) {
-        if (selectedVariante.images && selectedVariante.images.length > 0) {
-          imageUrl = selectedVariante.images[0].direct_url;
-        } else if (selectedVariante.imageUrl) {
-          imageUrl = selectedVariante.imageUrl;
-        }
-      } else if (selectedImage) {
-        imageUrl = selectedImage.direct_url;
-      } else if (productImages && Array.isArray(productImages) && productImages.length > 0) {
-        imageUrl = productImages[0].direct_url;
-      }
+      // Use a cached image URL to avoid recomputing
+      const imageUrl = selectedImage?.direct_url || article.image_produit;
 
+      // Create a minimal product object with only essential data
       const productObj = {
         id: article.id,
         nom: article.nom_produit,
         prix: selectedVariante?.prix || article.prix_produit,
-        image: imageUrl,
-        description: article.description_produit
+        image: imageUrl
       };
 
-      let variantObj = null;
-      if (selectedVariante) {
-        variantObj = {
-          id: selectedVariante.id,
-          sku: selectedVariante.sku,
-          prix: selectedVariante.prix,
-          attributs: selectedVariante.valeurs ? selectedVariante.valeurs.map(val => {
-            const attr = attributs.find(a => a.id === val.attribut_id);
-            return {
-              id: val.attribut_id,
-              nom: attr?.nom || '',
-              valeur: val.valeur || val.valeur_texte
-            };
-          }) : []
-        };
-      }
+      // Create a minimal variant object if needed
+      const variantObj = selectedVariante ? {
+        id: selectedVariante.id,
+        sku: selectedVariante.sku,
+        prix: selectedVariante.prix
+      } : null;
 
-      await addToCart(productObj, variantObj, quantity);
-      setAddedToCart(true);
+      // Add to cart in the background without awaiting
+      const cartPromise = addToCart(productObj, variantObj, quantity);
+
+      // Set a timeout to hide the success message
       setTimeout(() => setAddedToCart(false), 2000);
+
+      // Handle any errors in the background
+      cartPromise.catch(error => {
+        // Don't show alert as it blocks the UI
+        setAddedToCart(false);
+      });
     } catch (error) {
-      console.error("Error adding to cart:", error);
-      alert(`Error adding to cart: ${error.message || 'Unknown error'}`);
+      setAddedToCart(false);
     }
   };
 
@@ -677,12 +673,12 @@ const ProductDetailPage = () => {
         </svg>
         <h2 className="text-xl font-bold text-gray-800 mb-2">Erreur</h2>
         <p className="text-gray-600">{error}</p>
-        <button
-          className="mt-4 px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
-          onClick={() => navigate(-1)}
-        >
-          Retour
-        </button>
+        <BackButton
+          variant="filled"
+          size="sm"
+          className="mt-4 px-4 py-2 text-sm"
+          label="Retour"
+        />
       </div>
     </div>
   );
@@ -714,15 +710,12 @@ const ProductDetailPage = () => {
         <h2 className="text-2xl font-light text-gray-800 mb-4">Article introuvable</h2>
         <p className="text-gray-600 mb-4">Le produit que vous recherchez n'existe pas ou a été supprimé.</p>
         <p className="text-sm text-gray-500 mb-8">ID du produit: {id}</p>
-        <button
-          className="flex items-center bg-[#A67B5B] text-white px-8 py-3 rounded-lg font-medium shadow-md hover:bg-[#8B5A2B] hover:shadow-lg transition-all duration-300"
-          onClick={() => navigate(-1)}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-          </svg>
-          <span>Retour</span>
-        </button>
+        <BackButton
+          variant="filled"
+          size="sm"
+          className="mx-auto px-4 py-2 text-sm"
+          label="Retour"
+        />
       </div>
     </div>
   );
@@ -731,12 +724,14 @@ const ProductDetailPage = () => {
     <div className="min-h-screen bg-gray-50 text-gray-800 font-serif" key={`product-detail-${id}`}>
       <style dangerouslySetInnerHTML={{ __html: customStyles }} />
       <div className="container mx-auto px-4 py-8">
-        <button
-          className="mb-6 px-6 py-2 bg-gray-100 text-gray-700  hover:bg-gray-200 transition-all duration-300 shadow-sm hover:shadow-md"
-          onClick={() => navigate(-1)}
-        >
-          ← Retour
-        </button>
+        <div className="flex justify-start mb-6">
+          <BackButton
+            variant="outline"
+            size="sm"
+            className="px-4 py-2 text-sm"
+            label="Retour"
+          />
+        </div>
 
         <div className="flex flex-col md:flex-row gap-8">
           {/* Left side: Image section */}
@@ -872,7 +867,7 @@ const ProductDetailPage = () => {
                         key={index}
                         onClick={() => handleSizeChange(taille)}
                         className={`px-4 py-2 border rounded-lg text-sm font-medium transition-all duration-300 ${
-                          isSelected ? 'bg-gray-900 text-white shadow-md' : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-100'
+                          isSelected ? 'bg-[#A67B5B] text-white shadow-md' : 'bg-white text-gray-800 border-gray-200 hover:bg-gray-100'
                         }`}
                       >
                         {taille}
@@ -911,7 +906,7 @@ const ProductDetailPage = () => {
                 label={cartLoading ? "AJOUT EN COURS..." : addedToCart ? "AJOUTÉ AU PANIER ✓" : (isInStock(article) || isInStock(selectedVariante)) ? "AJOUTER AU PANIER" : "PRODUIT INDISPONIBLE"}
                 onClick={handleAddToCart}
                 disabled={!(isInStock(article) || isInStock(selectedVariante)) || cartLoading}
-                className="flex-1 py-3 bg-gray-900 text-white rounded-lg shadow-md hover:bg-gray-800 transition-all duration-300"
+                className="flex-1 py-3 btn-primary rounded-lg shadow-md transition-all duration-300"
               />
             </div>
 

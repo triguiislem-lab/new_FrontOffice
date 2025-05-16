@@ -33,7 +33,10 @@ export function AllCat() {
   useEffect(() => {
     axios.get("https://laravel-api.fly.dev/api/categories")
       .then((response) => {
-        console.log(response.data); // Vérifiez ce que vous obtenez ici
+        // Only log in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.log(response.data); // Vérifiez ce que vous obtenez ici
+        }
         setCategories(response.data);
         setLoading(false);
       })

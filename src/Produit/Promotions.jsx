@@ -204,35 +204,48 @@ function Promotions() {
         if (response.data && Array.isArray(response.data.data)) {
           const products = response.data.data;
 
-          // Log information about the first few products
-          const sampleProducts = products.slice(0, 3);
-          sampleProducts.forEach(product => {
-            console.log(`Product ${product.id} (${product.nom_produit}):`);
-            console.log('- image_produit:', product.image_produit);
-            console.log('- categorie_id:', product.categorie_id);
-            console.log('- category_id:', product.category_id);
-            console.log('- categorie:', product.categorie);
-          });
+          // Log information about the first few products only in development
+          if (process.env.NODE_ENV !== 'production') {
+            const sampleProducts = products.slice(0, 3);
+            sampleProducts.forEach(product => {
+              console.log(`Product ${product.id} (${product.nom_produit}):`);
+              console.log('- image_produit:', product.image_produit);
+              console.log('- categorie_id:', product.categorie_id);
+              console.log('- category_id:', product.category_id);
+              console.log('- categorie:', product.categorie);
+            });
+          }
 
-          // Log category distribution
-          const categoryDistribution = {};
-          products.forEach(product => {
-            const categoryId = product.categorie_id || (product.categorie && product.categorie.id) || product.category_id;
-            if (categoryId) {
-              categoryDistribution[categoryId] = (categoryDistribution[categoryId] || 0) + 1;
-            }
-          });
-          console.log('Products by category:', categoryDistribution);
+          // Log category distribution only in development
+          if (process.env.NODE_ENV !== 'production') {
+            const categoryDistribution = {};
+            products.forEach(product => {
+              const categoryId = product.categorie_id || (product.categorie && product.categorie.id) || product.category_id;
+              if (categoryId) {
+                categoryDistribution[categoryId] = (categoryDistribution[categoryId] || 0) + 1;
+              }
+            });
+            console.log('Products by category:', categoryDistribution);
+          }
 
           setProduits(products);
-          console.log(`Loaded ${products.length} products`);
+          // Log only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.log(`Loaded ${products.length} products`);
+          }
         } else {
-          console.error('Format de données de produits invalide:', response.data);
+          // Log error only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Format de données de produits invalide:', response.data);
+          }
           setProduits([]);
         }
       })
       .catch(error => {
-        console.error('Erreur lors de la récupération des produits:', error);
+        // Log error only in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Erreur lors de la récupération des produits:', error);
+        }
         setProduits([]);
       });
 
@@ -242,19 +255,31 @@ function Promotions() {
         // Check if response.data is an array directly (no data property)
         if (Array.isArray(response.data)) {
           setCategories(response.data);
-          console.log('Categories loaded directly:', response.data.length);
+          // Log only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Categories loaded directly:', response.data.length);
+          }
         }
         // Check if response.data.data is an array (with data property)
         else if (response.data && Array.isArray(response.data.data)) {
           setCategories(response.data.data);
-          console.log('Categories loaded from data property:', response.data.data.length);
+          // Log only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Categories loaded from data property:', response.data.data.length);
+          }
         } else {
-          console.error('Format de données de catégories invalide:', response.data);
+          // Log error only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Format de données de catégories invalide:', response.data);
+          }
           setCategories([]);
         }
       })
       .catch(error => {
-        console.error('Erreur lors de la récupération des catégories:', error);
+        // Log error only in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Erreur lors de la récupération des catégories:', error);
+        }
         setCategories([]);
       });
 
@@ -264,19 +289,31 @@ function Promotions() {
         // Check if response.data is an array directly (no data property)
         if (Array.isArray(response.data)) {
           setMarques(response.data);
-          console.log('Marques loaded:', response.data);
+          // Log only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Marques loaded:', response.data);
+          }
         }
         // Check if response.data.data is an array (with data property)
         else if (response.data && Array.isArray(response.data.data)) {
           setMarques(response.data.data);
-          console.log('Marques loaded from data property:', response.data.data);
+          // Log only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Marques loaded from data property:', response.data.data);
+          }
         } else {
-          console.error('Format de données de marques invalide:', response.data);
+          // Log error only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Format de données de marques invalide:', response.data);
+          }
           setMarques([]);
         }
       })
       .catch(error => {
-        console.error('Erreur lors de la récupération des marques:', error);
+        // Log error only in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Erreur lors de la récupération des marques:', error);
+        }
         setMarques([]);
       });
 
@@ -288,25 +325,40 @@ function Promotions() {
           // Check if the data is paginated
           if (response.data.data.data && Array.isArray(response.data.data.data)) {
             setEvenements(response.data.data.data);
-            console.log('Promotion events loaded (paginated):', response.data.data.data);
+            // Log only in development
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('Promotion events loaded (paginated):', response.data.data.data);
+            }
           }
           // Check if it's a direct array
           else if (Array.isArray(response.data.data)) {
             setEvenements(response.data.data);
-            console.log('Promotion events loaded (direct):', response.data.data);
+            // Log only in development
+            if (process.env.NODE_ENV !== 'production') {
+              console.log('Promotion events loaded (direct):', response.data.data);
+            }
           }
         }
         // Fallback for old API format
         else if (Array.isArray(response.data)) {
           setEvenements(response.data);
-          console.log('Promotion events loaded (legacy format):', response.data);
+          // Log only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Promotion events loaded (legacy format):', response.data);
+          }
         }
         else if (response.data && Array.isArray(response.data.data)) {
           setEvenements(response.data.data);
-          console.log('Promotion events loaded from data property (legacy format):', response.data.data);
+          // Log only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.log('Promotion events loaded from data property (legacy format):', response.data.data);
+          }
         }
         else {
-          console.error('Format de données des événements promotionnels invalide:', response.data);
+          // Log error only in development
+          if (process.env.NODE_ENV !== 'production') {
+            console.error('Format de données des événements promotionnels invalide:', response.data);
+          }
           // Fallback to hardcoded events if API fails
           setEvenements([
             { id: 'soldes', nom: 'Soldes' },
@@ -316,7 +368,10 @@ function Promotions() {
         }
       })
       .catch(error => {
-        console.error('Erreur lors de la récupération des événements promotionnels:', error);
+        // Log error only in development
+        if (process.env.NODE_ENV !== 'production') {
+          console.error('Erreur lors de la récupération des événements promotionnels:', error);
+        }
         // Fallback to hardcoded events if API fails
         setEvenements([
           { id: 'soldes', nom: 'Soldes' },

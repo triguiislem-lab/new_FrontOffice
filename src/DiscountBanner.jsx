@@ -31,7 +31,7 @@ const DiscountBanner = ({ isOpen, onClose }) => {
         </p>
         <div className="flex justify-end mt-6">
           <button
-            className="bg-gray-900 text-white px-6 py-2 rounded-lg hover:bg-gray-800"
+            className="bg-[#A67B5B] text-white px-6 py-2 rounded-lg hover:bg-[#8B5A2B] transition-colors"
             onClick={handleClose}
           >
             Fermer

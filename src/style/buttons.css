@@ -1,0 +1,220 @@
+/* Styles de boutons */
+
+/* Bouton principal */
+.btn-primary {
+  background-color: #A67B5B;
+  color: white;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  border: none;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary:hover {
+  background-color: #8B5A2B;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Bouton secondaire */
+.btn-secondary {
+  background-color: white;
+  color: #A67B5B;
+  border: 1px solid #A67B5B;
+  padding: 0.75rem 1.5rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.btn-secondary:hover {
+  background-color: #F9F7F5;
+  color: #8B5A2B;
+  border-color: #8B5A2B;
+  transform: translateY(-1px);
+}
+
+/* Bouton avec transition */
+.btn-transition {
+  position: relative;
+  overflow: hidden;
+  z-index: 1;
+  background-color: #A67B5B;
+  color: white;
+  border: 1px solid #A67B5B;
+}
+
+.btn-transition::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background-color: #8B5A2B;
+  transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  z-index: -1;
+}
+
+.btn-transition:hover::before {
+  transform: translateX(100%);
+}
+
+/* Bouton avec effet de remplissage */
+.btn-fill {
+  position: relative;
+  overflow: hidden;
+  background-color: transparent;
+  color: #A67B5B;
+  border: 1px solid #A67B5B;
+  z-index: 1;
+}
+
+.btn-fill::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 0;
+  height: 100%;
+  background-color: #A67B5B;
+  transition: width 0.3s ease;
+  z-index: -1;
+}
+
+.btn-fill:hover {
+  color: white;
+}
+
+.btn-fill:hover::before {
+  width: 100%;
+}
+
+/* Bouton avec effet d'ombre */
+.btn-shadow {
+  background-color: #A67B5B;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 6px rgba(166, 123, 91, 0.25);
+  transition: all 0.3s ease;
+}
+
+.btn-shadow:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 7px 14px rgba(166, 123, 91, 0.3);
+}
+
+/* Bouton avec bordure animée */
+.btn-border {
+  position: relative;
+  background-color: transparent;
+  color: #A67B5B;
+  border: none;
+  z-index: 1;
+}
+
+.btn-border::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 1px solid #A67B5B;
+  transition: all 0.3s ease;
+}
+
+.btn-border:hover::after {
+  top: -3px;
+  left: -3px;
+  right: -3px;
+  bottom: -3px;
+  opacity: 0.5;
+}
+
+/* Bouton avec effet de pulsation */
+.btn-pulse {
+  animation: pulse 2s infinite;
+  background-color: #A67B5B;
+  color: white;
+  border: none;
+}
+
+@keyframes pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(166, 123, 91, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(166, 123, 91, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(166, 123, 91, 0);
+  }
+}
+
+/* Bouton avec icône */
+.btn-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  background-color: #A67B5B;
+  color: white;
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.btn-icon svg {
+  transition: transform 0.3s ease;
+}
+
+.btn-icon:hover svg {
+  transform: translateX(3px);
+}
+
+/* Bouton désactivé */
+.btn-disabled {
+  background-color: #E5E7EB;
+  color: #9CA3AF;
+  cursor: not-allowed;
+  border: none;
+}
+
+.btn-disabled:hover {
+  background-color: #E5E7EB;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Bouton de chargement */
+.btn-loading {
+  position: relative;
+  background-color: #A67B5B;
+  color: transparent;
+  border: none;
+  pointer-events: none;
+}
+
+.btn-loading::after {
+  content: '';
+  position: absolute;
+  width: 16px;
+  height: 16px;
+  top: 50%;
+  left: 50%;
+  margin-top: -8px;
+  margin-left: -8px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-top-color: white;
+  animation: spin 1s infinite linear;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}

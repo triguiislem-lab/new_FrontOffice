@@ -8,7 +8,7 @@ import DiscountModal from "@/DiscountBanner";
 import { useAuth } from "@/Contexts/AuthContext";
 import OptimizedCarousel from "../Components/OptimizedCarousel";
 import apiService from "../utils/apiService";
-import DynamicButton from "./won";
+import DynamicButton from "../Components/DynamicButton";
 
 // Carousel settings for the OptimizedCarousel component
 const heroSettings = {
@@ -192,7 +192,7 @@ export function Home() {
     <div className="min-h-screen bg-gray-50 text-gray-800 font-serif">
       {/* 🔹 Modale de réduction */}
       <DiscountModal isOpen={isModalOpen} onClose={closeModal} />
-      
+
       {/* 🔹 HERO CAROUSEL - Using OptimizedCarousel component */}
       <section className="relative w-full">
         <OptimizedCarousel
@@ -255,7 +255,7 @@ export function Home() {
               <DynamicButton
                 label="Explorer toutes les catégories"
                 to="/Produit/AllCat"
-                className="btn-transition"
+                className="btn-primary px-8 py-4 rounded-lg font-medium shadow-md hover:shadow-xl"
               />
             </div>
           </div>
